@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>周期时间看板</title>
+    
+    <title>Az Captain Time Cycle Dashboard</title>
+    
+    <link rel="icon" href="https://imgbed.captainzeqi.com/file/1758348585439_%E9%BB%91%E7%99%BD%E8%B7%AF%E9%A3%9E%E9%80%8F%E6%98%8E%E8%83%8C%E6%99%AF.png" type="image/png">
+    
     <style>
         /* --- 1. 基本样式 --- */
         :root {
@@ -646,16 +650,11 @@
             render();
             projectForm.reset();
             projectIdInput.value = '';
-            // 重置后，重新设置日期
             initFormDates();
         });
 
 
-        // 【V2 更改】 6.2 自动计算 (三向关联)
-        // 逻辑：
-        // 1. 修改 "开始时间" 或 "周期天数" -> 自动计算 "结束时间"
-        // 2. 修改 "结束时间" -> 自动计算 "周期天数"
-
+        // 6.2 自动计算 (三向关联)
         // 1. (开始 + 周期) -> 结束
         function calculateEndDate() {
             if (!startDateInput.value || !cycleDaysInput.value) return;
@@ -665,7 +664,6 @@
                 days = 1;
                 cycleDaysInput.value = 1;
             }
-            // 周期天数已包含当天，所以是 (天数 - 1)
             const endDate = addDays(startDate, days - 1);
             endDateInput.value = formatDate(endDate);
         }
@@ -676,20 +674,16 @@
             const startDate = parseDate(startDateInput.value);
             const endDate = parseDate(endDateInput.value);
 
-            // 如果结束日期早于开始日期，将其重置为开始日期，周期为1
             if (endDate.getTime() < startDate.getTime()) {
                 endDateInput.value = startDateInput.value;
                 cycleDaysInput.value = 1;
                 return;
             }
             
-            // 计算天数差异
             const diff = getDaysDiff(endDate, startDate);
-            // 周期天数 = 差异 + 1 (包含当天)
             cycleDaysInput.value = diff + 1;
         }
         
-        // 绑定事件
         startDateInput.addEventListener('change', calculateEndDate);
         cycleDaysInput.addEventListener('input', calculateEndDate);
         endDateInput.addEventListener('change', calculateCycleDays);
@@ -720,15 +714,14 @@
 
         // 6.4 导入/导出
         exportBtn.addEventListener('click', () => {
-            // 【V2 更改】 动态文件名
             const today = new Date();
-            const dateString = formatDate(today).replace(/-/g, ''); // 移除 '-' 得到 YYYYMMDD
+            const dateString = formatDate(today).replace(/-/g, ''); 
             const filename = `time${dateString}.json`;
 
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.projects, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", filename); // 使用动态文件名
+            downloadAnchorNode.setAttribute("download", filename); 
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
@@ -745,7 +738,7 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    const importedProjects = JSON.parse(event.target.result);
+                    const importedProjects = JSON.JSON.parse(event.target.result);
                     if (Array.isArray(importedProjects)) {
                         state.projects = importedProjects;
                         saveState();
@@ -803,11 +796,8 @@
             renderTimeline();
         }
 
-        // 辅助函数：设置表单的默认日期
         function initFormDates() {
-             // 设置默认开始时间为今天
             startDateInput.value = formatDate(new Date());
-            // 【V2 更改】 调用 calculateEndDate 来设置结束时间
             calculateEndDate();
         }
 
