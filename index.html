@@ -1,14 +1,29 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN" data-theme="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Az Captain Time Cycle Dashboard</title>
     <link rel="icon" href="https://imgbed.captainzeqi.com/file/1758348585439_%E9%BB%91%E7%99%BD%E8%B7%AF%E9%A3%9E%E9%80%8F%E6%98%8E%E8%83%8C%E6%99%AF.png" type="image/png">
     
     <style>
-        /* --- 1. V5 风格：科技感暗黑主题 --- */
-        :root {
+        /* --- 1. V7 风格：双主题系统 --- */
+        
+        /* [data-theme="light"] (明亮主题) */
+        [data-theme="light"] {
+            --color-bg: #ffffff;           /* 白色 (背景) */
+            --color-surface: #f4f7f6;      /* 浅灰 (表面) */
+            --color-text: #0a192f;         /* 深蓝 (主文字) */
+            --color-text-muted: #555;   /* 灰色 (次要文字) */
+            --color-primary: #007bff;      /* 蓝色 (主色调) */
+            --color-primary-dark: #0056b3; /* 蓝色 (深) */
+            --color-border: #ddd;          /* 边框色 */
+            --color-danger: #f44336;       /* 删除按钮 */
+            --color-today-bg: #fffbe6;     /* "今天"高亮背景 */
+            --color-today-border: #ffe58f;
+        }
+
+        /* [data-theme="dark"] (黑暗/科技感主题) */
+        [data-theme="dark"] {
             --color-bg: #0a192f;           /* 深海军蓝 (背景) */
             --color-surface: #1e2a47;      /* 石墨蓝 (表面) */
             --color-text: #e6f1ff;         /* 亮白/浅蓝 (主文字) */
@@ -29,12 +44,13 @@
         }
         html, body {
             height: 100%;
-            overflow: hidden; /* 确保主页面不滚动 */
+            overflow: hidden; 
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--color-bg);
             color: var(--color-text);
+            transition: background-color 0.3s ease, color 0.3s ease; /* V7: 平滑切换 */
         }
 
         /* --- 2. V5 布局：100vh 主容器 --- */
@@ -44,7 +60,7 @@
             height: 100vh;
         }
 
-        /* --- 3. 头部 (导入/导出) --- */
+        /* --- 3. 头部 (导入/导出/主题) --- */
         header {
             display: flex;
             justify-content: space-between;
@@ -52,14 +68,16 @@
             padding: 15px 30px;
             background-color: var(--color-surface);
             border-bottom: 1px solid var(--color-border);
-            flex-shrink: 0; /* 防止收缩 */
+            flex-shrink: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         header h1 {
             margin: 0;
             font-size: 24px;
             color: var(--color-primary);
+            transition: color 0.3s ease;
         }
-        header .io-buttons {
+        .header-controls {
             display: flex;
             gap: 10px;
         }
@@ -67,22 +85,26 @@
 
         /* --- 4. 主内容区 (表单 + 列表) --- */
         .project-management-full {
-            flex-grow: 1; /* 填满剩余空间 */
+            flex-grow: 1; 
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
             padding: 20px;
-            overflow: hidden; /* 关键：让子元素内部滚动 */
+            overflow: hidden; 
         }
 
         .section-box {
             background-color: var(--color-surface);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 统一阴影 */
             padding: 20px;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 关键 */
+            overflow: hidden; 
+            transition: background-color 0.3s ease;
+        }
+        [data-theme="dark"] .section-box {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         .section-box h3 {
@@ -90,11 +112,12 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             color: var(--color-primary);
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
 
         /* --- 4.1 表单 --- */
         .project-form-container {
-            overflow-y: auto; /* 表单内容多时滚动 */
+            overflow-y: auto;
         }
         #project-form .form-group {
             margin-bottom: 15px;
@@ -104,11 +127,12 @@
             margin-bottom: 5px;
             font-weight: 600;
             color: var(--color-text-muted);
+            transition: color 0.3s ease;
         }
 
-        /* --- 4.2 列表 (【V5 优化】带搜索框) --- */
+        /* --- 4.2 列表 (【V7 优化】带数量) --- */
         .project-list-container {
-            padding: 0; /* 内部管理 padding */
+            padding: 0; 
         }
         .list-header {
             display: flex;
@@ -121,13 +145,20 @@
             border: none;
             padding: 0;
         }
+        /* V7 新增: 项目数量 span */
+        #project-count-span {
+            color: var(--color-text-muted);
+            font-weight: 400;
+            font-size: 16px;
+            margin-left: 8px;
+        }
         #search-box {
             width: 250px;
         }
         
         .table-wrapper {
             flex-grow: 1;
-            overflow-y: auto; /* 列表滚动 */
+            overflow-y: auto; 
             padding: 20px;
         }
         
@@ -141,6 +172,7 @@
             padding: 12px 15px;
             text-align: left;
             vertical-align: top;
+            transition: border-color 0.3s ease;
         }
         th {
             background-color: var(--color-surface);
@@ -148,31 +180,43 @@
             position: sticky;
             top: 0;
             z-index: 1;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         tr:hover {
-            background-color: rgba(100, 255, 218, 0.05);
+             /* V7 统一: 使用 var() */
+            background-color: var(--color-today-bg);
         }
         td .delete-btn {
             background: var(--color-danger);
             border-color: var(--color-danger);
+            color: #fff; /* 确保删除按钮文字为白色 */
+        }
+        td .delete-btn:hover {
+            color: #fff;
+            background-color: #c82333;
+            border-color: #c82333;
         }
         
-        /* --- 5. V5 按钮样式 --- */
+        /* --- 5. V7 按钮样式 --- */
         button {
             cursor: pointer;
             padding: 8px 14px;
             border: 1px solid var(--color-primary);
             background-color: var(--color-primary);
-            color: #0a192f; /* 暗色背景配亮色按钮 */
+            /* V7 切换: 明亮主题用深色字, 黑暗主题用深色字 */
+            color: var(--color-bg); 
             border-radius: 4px;
             font-size: 14px;
             font-weight: 600;
             transition: all 0.2s ease;
         }
+        [data-theme="light"] button {
+            color: #fff; /* 明亮主题时，主按钮文字固定为白色 */
+        }
         button:hover {
             background-color: var(--color-primary-dark);
             border-color: var(--color-primary-dark);
-            box-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+            box-shadow: 0 0 10px var(--color-primary);
         }
         button.secondary {
             background-color: transparent;
@@ -180,23 +224,44 @@
             border: 1px solid var(--color-primary);
         }
         button.secondary:hover {
-            background-color: rgba(100, 255, 218, 0.1);
+            background-color: var(--color-today-bg);
             box-shadow: none;
         }
+        
+        button:disabled {
+            background-color: var(--color-text-muted);
+            border-color: var(--color-text-muted);
+            color: var(--color-surface);
+            cursor: not-allowed;
+            opacity: 0.5;
+            box-shadow: none;
+        }
+        button.secondary:disabled {
+            background-color: transparent;
+            border-color: var(--color-text-muted);
+            color: var(--color-text-muted);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-        /* --- 5.1 V5 输入框样式 --- */
+        /* --- 5.1 V7 输入框样式 --- */
         input[type="text"], input[type="date"], input[type="number"], textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--color-border);
             border-radius: 4px;
             box-sizing: border-box; 
-            background-color: var(--color-bg); /* 输入框背景 */
+            background-color: var(--color-bg);
             color: var(--color-text);
             font-size: 14px;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1); /* 反色日期图标 */
+        /* V7 修复: 日期选择器图标 */
+        [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: none;
+        }
+        [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
         }
         
         /* --- 6. V5 页脚 --- */
@@ -208,6 +273,7 @@
             color: var(--color-text-muted);
             background-color: var(--color-surface);
             border-top: 1px solid var(--color-border);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         /* --- 7. V5 时间轴弹窗 (Modal) --- */
@@ -218,6 +284,12 @@
             z-index: 50;
             padding: 12px 20px;
             font-size: 16px;
+            box-shadow: 0 5px 15px var(--color-primary);
+        }
+        [data-theme="light"] #open-timeline-btn {
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+        [data-theme="dark"] #open-timeline-btn {
             box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
         }
 
@@ -250,6 +322,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: background-color 0.3s ease;
         }
 
         /* --- 8. 时间轴控制 (Modal 内) --- */
@@ -261,6 +334,7 @@
             background-color: var(--color-surface);
             border-bottom: 1px solid var(--color-border);
             flex-shrink: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         #timeline-controls .view-toggles, #timeline-controls .navigation {
             display: flex;
@@ -271,6 +345,7 @@
             font-weight: 600;
             margin: 0;
             color: var(--color-primary);
+            transition: color 0.3s ease;
         }
         #close-timeline-btn {
             background: none;
@@ -288,22 +363,23 @@
 
         /* --- 9. 时间轴看板 (Modal 内) --- */
         #timeline-kanban {
-            overflow: auto; /* 关键：时间轴自己滚动 */
+            overflow: auto; 
             padding: 20px;
             flex-grow: 1;
         }
         .timeline-grid {
-            min-width: 1200px; /* 保证最小宽度 */
+            min-width: 1200px;
         }
         /* 时间轴头部 */
         .timeline-header {
             display: grid;
-            grid-template-columns: 200px 1fr; /* 200px 用于项目名 */
+            grid-template-columns: 200px 1fr; 
             position: sticky;
             top: 0;
             background: var(--color-bg);
             z-index: 10;
             border-bottom: 2px solid var(--color-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .timeline-header .header-name {
             padding: 10px;
@@ -311,6 +387,7 @@
             border-right: 1px solid var(--color-border);
             text-align: center;
             color: var(--color-text-muted);
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         .timeline-header-dates {
             display: grid;
@@ -322,15 +399,20 @@
             text-align: center;
             border-right: 1px dotted var(--color-border);
             color: var(--color-text-muted);
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         /* 时间轴主体 */
         .timeline-body .project-row {
             display: grid;
             grid-template-columns: 200px 1fr;
             border-bottom: 1px solid var(--color-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        .project-row:nth-child(even) {
-            background-color: rgba(30, 42, 71, 0.5); /* 条纹 */
+        [data-theme="light"] .project-row:nth-child(even) {
+            background-color: var(--color-surface);
+        }
+        [data-theme="dark"] .project-row:nth-child(even) {
+            background-color: rgba(30, 42, 71, 0.5); /* 黑暗主题条纹 */
         }
         .project-row .project-name {
             padding: 15px 10px;
@@ -341,10 +423,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
             color: var(--color-text);
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         .project-row .project-bar-wrapper {
-            position: relative; /* 关键：用于绝对定位项目条 */
-            height: 50px; /* 每行的高度 */
+            position: relative;
+            height: 50px; 
         }
         .project-bar {
             position: absolute;
@@ -354,7 +437,7 @@
             border: 1px solid var(--color-primary-dark);
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            color: #0a192f;
+            color: var(--color-bg); /* V7: 自动反色 */
             font-size: 12px;
             font-weight: 600;
             padding: 0 8px;
@@ -365,10 +448,13 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+        [data-theme="light"] .project-bar {
+             color: #fff;
+        }
         .project-bar:hover {
             opacity: 0.8;
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(100, 255, 218, 0.3);
+            box-shadow: 0 4px 10px var(--color-primary);
         }
         /* "今天" 的高亮 */
         .timeline-header-cell.today {
@@ -387,7 +473,8 @@
 
         <header>
             <h1>Az Captain Time Cycle Dashboard</h1>
-            <div class="io-buttons">
+            <div class="header-controls">
+                <button id="theme-toggle-btn" class="secondary">切换主题</button>
                 <button id="export-btn">导出 .JSON</button>
                 <button id="import-btn" class="secondary">导入 .JSON</button>
                 <input type="file" id="import-file" accept=".json">
@@ -426,7 +513,7 @@
             
             <div class="project-list-container section-box">
                 <div class="list-header">
-                    <h3>项目列表</h3>
+                    <h3>项目列表 <span id="project-count-span">(0)</span></h3>
                     <input type="text" id="search-box" placeholder="搜索项目名称、备注...">
                 </div>
                 <div class="table-wrapper">
@@ -499,7 +586,9 @@
     document.addEventListener('DOMContentLoaded', () => {
 
         // --- 1. DOM 引用 ---
-        // 主页面
+        // (V7 更改: 添加主题按钮和项目数量 span)
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const projectCountSpan = document.getElementById('project-count-span');
         const projectForm = document.getElementById('project-form');
         const projectIdInput = document.getElementById('project-id');
         const projectNameInput = document.getElementById('project-name');
@@ -512,14 +601,10 @@
         const importBtn = document.getElementById('import-btn');
         const importFile = document.getElementById('import-file');
         const pageFooter = document.getElementById('page-footer');
-        const searchBox = document.getElementById('search-box'); // V5 新增
-
-        // 弹窗 (Modal)
-        const openTimelineBtn = document.getElementById('open-timeline-btn'); // V5 新增
-        const closeTimelineBtn = document.getElementById('close-timeline-btn'); // V5 新增
-        const timelineModal = document.getElementById('timeline-modal'); // V5 新增
-        
-        // 弹窗内部
+        const searchBox = document.getElementById('search-box'); 
+        const openTimelineBtn = document.getElementById('open-timeline-btn'); 
+        const closeTimelineBtn = document.getElementById('close-timeline-btn'); 
+        const timelineModal = document.getElementById('timeline-modal'); 
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const todayBtn = document.getElementById('today-btn');
@@ -532,15 +617,15 @@
         let state = {
             projects: [],
             currentDate: new Date(),
-            currentView: 'month' 
+            currentView: 'month'
         };
 
-        // --- 3. 日期辅助函数 ---
+        // --- 3. 日期辅助函数 --- (无 V7 更改)
         const MS_PER_DAY = 1000 * 60 * 60 * 24;
         function parseDate(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); }
         function formatDate(date) { return date.toISOString().split('T')[0]; }
         function addDays(date, days) { const n = new Date(date.getTime()); n.setDate(n.getDate() + days); return n; }
-        function addMonths(date, months) { const n = new Date(date.getTime()); n.setMonth(n.getMonth() + months); return n; }
+        function addMonths(date, months) { const d = new Date(date); d.setDate(1); d.setMonth(d.getMonth() + months); return d;}
         function addYears(date, years) { const n = new Date(date.getTime()); n.setFullYear(n.getFullYear() + years); return n; }
         function getDaysDiff(d1, d2) { const d_1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate()); const d_2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate()); return Math.round((d_1 - d_2) / MS_PER_DAY); }
         function getDaysInMonth(date) { return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(); }
@@ -548,13 +633,13 @@
         function getStartOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
         function getStartOfYear(date) { return new Date(date.getFullYear(), 0, 1); }
 
-        // --- 4. 状态管理 (LocalStorage) ---
+        // --- 4. 状态管理 (LocalStorage) --- (无 V7 更改)
         function saveState() { localStorage.setItem('timelineProjects', JSON.stringify(state.projects)); }
         function loadState() { const p = localStorage.getItem('timelineProjects'); if (p) state.projects = JSON.parse(p); }
 
-        // --- 5. V5 渲染逻辑 (分离) ---
+        // --- 5. V7 渲染逻辑 ---
 
-        // 5.1 渲染主视图 (列表 + 搜索)
+        // 5.1 渲染主视图 (列表 + 搜索) - (V7 升级: 显示项目数量)
         function renderMainView() {
             projectListBody.innerHTML = '';
             
@@ -566,8 +651,15 @@
                 p.end.includes(filterText)
             );
 
+            // V7 更改: 更新项目数量
+            if (filterText) {
+                projectCountSpan.textContent = `(${filteredProjects.length} / ${state.projects.length})`;
+            } else {
+                projectCountSpan.textContent = `(${state.projects.length})`;
+            }
+
             if (filteredProjects.length === 0) {
-                projectListBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无项目</td></tr>';
+                projectListBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted);">暂无项目</td></tr>';
                 return;
             }
             filteredProjects.forEach(p => {
@@ -587,28 +679,21 @@
             });
         }
 
-        // 5.2 渲染弹窗视图 (时间轴)
+        // 5.2 渲染弹窗视图 (时间轴) - (V7 升级: 移除 'all' 视图)
         function renderModalView() {
             timelineHeaderDates.innerHTML = '';
             timelineBody.innerHTML = '';
             
             viewBtns.forEach(btn => {
-                if(btn.id === 'close-timeline-btn') return;
-                btn.classList.toggle('secondary', btn.dataset.view !== state.currentView);
-                btn.classList.toggle('primary', btn.dataset.view === state.currentView); // A non-standard class, let's fix style
-            });
-            // V5 样式修复: 确保按钮样式正确切换
-            viewBtns.forEach(btn => {
                 if (btn.dataset.view) {
-                    if (btn.dataset.view === state.currentView) {
-                        btn.classList.remove('secondary'); // 激活
-                    } else {
-                        btn.classList.add('secondary'); // 非激活
-                    }
+                    btn.classList.toggle('secondary', btn.dataset.view !== state.currentView);
                 }
             });
 
+            // V7 更改: 导航按钮始终启用 (因为 'all' 视图已移除)
+            [prevBtn, nextBtn, todayBtn].forEach(btn => btn.disabled = false);
 
+            // V7 更改: 移除 'all' 视图 case
             switch (state.currentView) {
                 case 'day': renderDayView(); break;
                 case 'week': renderWeekView(); break;
@@ -617,7 +702,7 @@
             }
         }
 
-        // 5.2.1-5.2.4 (渲染 日/周/月/年 视图) - (无V5更改，代码折叠)
+        // 5.2.1-5.2.4 (渲染 日/周/月/年 视图) - (无 V7 更改)
         function renderDayView() {
             const today = state.currentDate;
             const viewStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -685,7 +770,9 @@
             renderProjectBars(viewStart, viewEnd, 'month');
         }
 
-        // 5.2.5 渲染项目条 (通用逻辑) - (无V5更改，代码折叠)
+        // 5.2.5 (渲染 "全部" 视图) - (V7 移除: 函数已删除)
+
+        // 5.2.6 渲染项目条 (通用逻辑) - (无 V7 更改)
         function renderProjectBars(viewStart, viewEnd, unit) {
             const viewDuration = viewEnd.getTime() - viewStart.getTime();
             state.projects.forEach(project => {
@@ -710,7 +797,7 @@
             });
         }
         
-        // --- 6. 事件处理 ---
+        // --- 6. 事件处理 --- (V7 更改: 添加主题切换)
 
         // 6.1 表单提交 (添加/更新)
         projectForm.addEventListener('submit', (e) => {
@@ -731,13 +818,13 @@
                 state.projects.push(projectData);
             }
             saveState();
-            renderMainView(); // V5 更改: 只渲染主视图
+            renderMainView(); // 只渲染主视图
             projectForm.reset();
             projectIdInput.value = '';
             initFormDates();
         });
 
-        // 6.2 自动计算 (三向关联) - (无V5更改，代码折叠)
+        // 6.2 自动计算 (三向关联) - (无 V7 更改)
         function calculateEndDate() {
             if (!startDateInput.value || !cycleDaysInput.value) return;
             const startDate = parseDate(startDateInput.value);
@@ -762,7 +849,7 @@
         cycleDaysInput.addEventListener('input', calculateEndDate);
         endDateInput.addEventListener('change', calculateCycleDays);
 
-        // 6.3 列表中的编辑/删除
+        // 6.3 列表中的编辑/删除 - (无 V7 更改)
         projectListBody.addEventListener('click', (e) => {
             const id = e.target.dataset.id;
             if (!id) return;
@@ -770,7 +857,7 @@
                 if (confirm('确定要删除这个项目吗？')) {
                     state.projects = state.projects.filter(p => p.id !== id);
                     saveState();
-                    renderMainView(); // V5 更改: 只渲染主视图
+                    renderMainView();
                 }
             } else if (e.target.classList.contains('edit-btn')) {
                 const project = state.projects.find(p => p.id === id);
@@ -785,7 +872,7 @@
             }
         });
 
-        // 6.4 导入/导出 - (无V5更改，代码折叠)
+        // 6.4 导入/导出 - (无 V7 更改)
         exportBtn.addEventListener('click', () => {
             const today = new Date();
             const dateString = formatDate(today).replace(/-/g, ''); 
@@ -809,7 +896,7 @@
                     if (Array.isArray(importedProjects)) {
                         state.projects = importedProjects;
                         saveState();
-                        renderMainView(); // V5 更改: 只渲染主视图
+                        renderMainView();
                         alert('导入成功！');
                     } else { alert('导入失败：JSON 文件格式不正确。'); }
                 } catch (err) { alert('导入失败：' + err.message); }
@@ -818,28 +905,28 @@
             reader.readAsText(file);
         });
         
-        // 6.5 V5 弹窗控制
+        // 6.5 V5 弹窗控制 - (无 V7 更改)
         openTimelineBtn.addEventListener('click', () => {
             timelineModal.classList.remove('hidden');
-            renderModalView(); // V5 更改: 打开时才渲染
+            renderModalView(); 
         });
         closeTimelineBtn.addEventListener('click', () => {
             timelineModal.classList.add('hidden');
         });
 
-        // 6.6 V5 搜索框
+        // 6.6 V5 搜索框 - (无 V7 更改)
         searchBox.addEventListener('input', renderMainView);
 
-        // 6.7 弹窗内：视图切换
+        // 6.7 弹窗内：视图切换 - (V7 更改: 移除 'all' 逻辑)
         viewBtns.forEach(btn => {
             if(btn.id === 'close-timeline-btn') return;
             btn.addEventListener('click', () => {
-                state.currentView = btn.dataset.view;
-                renderModalView(); // V5 更改: 渲染弹窗视图
+                state.currentView = btn.dataset.view; 
+                renderModalView();
             });
         });
 
-        // 6.8 弹窗内：导航
+        // 6.8 弹窗内：导航 - (无 V7 更改)
         prevBtn.addEventListener('click', () => navigate(-1));
         nextBtn.addEventListener('click', () => navigate(1));
         todayBtn.addEventListener('click', () => navigate(0));
@@ -854,24 +941,39 @@
                     case 'year': state.currentDate = addYears(state.currentDate, direction); break;
                 }
             }
-            renderModalView(); // V5 更改: 渲染弹窗视图
+            renderModalView();
         }
 
-        // --- 7. 初始化 ---
+        // 6.9 【V7 新增】 主题切换
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme); // 保存用户偏好
+        });
+
+
+        // --- 7. 初始化 --- (V7 更改: 增加加载主题)
         function initFormDates() {
             startDateInput.value = formatDate(new Date());
             calculateEndDate();
         }
         
         function initFooter() {
-            // V5 更改: 动态设置页脚
             const host = window.location.host || 'time.haloninja.com';
             pageFooter.textContent = `@${host}`;
         }
 
+        // V7 新增: 加载保存的主题
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light'; // 默认明亮
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
         function init() {
+            loadTheme(); // V7: 必须在最开始加载主题
             loadState();
-            renderMainView(); // V5 更改: 只渲染主视图
+            renderMainView(); 
             initFormDates();
             initFooter();
         }
