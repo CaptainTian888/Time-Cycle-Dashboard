@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>Az Captain Time Cycle Dashboard</title>
-    
     <link rel="icon" href="https://imgbed.captainzeqi.com/file/1758348585439_%E9%BB%91%E7%99%BD%E8%B7%AF%E9%A3%9E%E9%80%8F%E6%98%8E%E8%83%8C%E6%99%AF.png" type="image/png">
     
     <style>
@@ -95,28 +93,22 @@
             display: none;
         }
 
-        /* --- 3. 项目管理 --- */
+        /* --- 3. 项目管理 (【V4 优化】) --- */
         #project-management {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 20px;
             border-bottom: 1px solid var(--color-border);
+            height: 450px; /* 【V4 更改】设置固定高度 */
         }
         #project-form-container {
             border-right: 1px solid var(--color-border);
             padding-right: 20px;
-        }
-        #project-form .form-group {
-            margin-bottom: 15px;
-        }
-        #project-form label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
+            overflow-y: auto; /* 【V4 更改】允许表单滚动 */
         }
         #project-list-container {
             overflow-y: auto;
-            max-height: 300px; /* 限制列表高度 */
+            /* 【V4 更改】移除 max-height: 300px; 限制 */
         }
         table {
             width: 100%;
@@ -655,7 +647,6 @@
 
 
         // 6.2 自动计算 (三向关联)
-        // 1. (开始 + 周期) -> 结束
         function calculateEndDate() {
             if (!startDateInput.value || !cycleDaysInput.value) return;
             const startDate = parseDate(startDateInput.value);
@@ -668,7 +659,6 @@
             endDateInput.value = formatDate(endDate);
         }
 
-        // 2. (结束 - 开始) -> 周期
         function calculateCycleDays() {
             if (!startDateInput.value || !endDateInput.value) return;
             const startDate = parseDate(startDateInput.value);
@@ -738,7 +728,7 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    const importedProjects = JSON.JSON.parse(event.target.result);
+                    const importedProjects = JSON.parse(event.target.result);
                     if (Array.isArray(importedProjects)) {
                         state.projects = importedProjects;
                         saveState();
