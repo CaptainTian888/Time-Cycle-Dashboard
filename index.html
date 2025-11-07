@@ -7,78 +7,52 @@
     <link rel="icon" href="https://imgbed.captainzeqi.com/file/1758348585439_%E9%BB%91%E7%99%BD%E8%B7%AF%E9%A3%9E%E9%80%8F%E6%98%8E%E8%83%8C%E6%99%AF.png" type="image/png">
     
     <style>
-        /* --- 1. 基本样式 --- */
+        /* --- 1. V5 风格：科技感暗黑主题 --- */
         :root {
-            --color-bg: #f4f7f6;
-            --color-text: #333;
-            --color-border: #ddd;
-            --color-primary: #007bff;
-            --color-primary-light: #e6f2ff;
-            --color-header: #fff;
-            --color-today-bg: #fffbe6;
-            --color-today-border: #ffe58f;
+            --color-bg: #0a192f;           /* 深海军蓝 (背景) */
+            --color-surface: #1e2a47;      /* 石墨蓝 (表面) */
+            --color-text: #e6f1ff;         /* 亮白/浅蓝 (主文字) */
+            --color-text-muted: #8892b0;   /* 灰蓝 (次要文字) */
+            --color-primary: #64ffda;      /* 高亮青色 (主色调) */
+            --color-primary-dark: #13a08f; /* 主色调 (深) */
+            --color-border: #303c5a;      /* 边框色 */
+            --color-danger: #f44336;       /* 删除按钮 */
+            --color-today-bg: rgba(100, 255, 218, 0.1); /* "今天"高亮背景 */
+            --color-today-border: var(--color-primary);
+        }
+
+        /* --- 全局重置 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden; /* 确保主页面不滚动 */
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--color-bg);
             color: var(--color-text);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        button {
-            cursor: pointer;
-            padding: 8px 12px;
-            border: 1px solid var(--color-primary);
-            background-color: var(--color-primary);
-            color: #fff;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-        button.secondary {
-            background-color: #fff;
-            color: var(--color-primary);
-            border: 1px solid var(--color-primary);
-        }
-        button.secondary:hover {
-            background-color: var(--color-primary-light);
-        }
-        input[type="text"], input[type="date"], input[type="number"], textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--color-border);
-            border-radius: 4px;
-            box-sizing: border-box; /* 关键 */
-        }
-        h2, h3 {
-            border-bottom: 2px solid var(--color-primary-light);
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .section {
-            padding: 20px;
         }
 
-        /* --- 2. 头部：导入/导出 --- */
+        /* --- 2. V5 布局：100vh 主容器 --- */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- 3. 头部 (导入/导出) --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background-color: var(--color-header);
+            padding: 15px 30px;
+            background-color: var(--color-surface);
             border-bottom: 1px solid var(--color-border);
+            flex-shrink: 0; /* 防止收缩 */
         }
         header h1 {
             margin: 0;
@@ -89,58 +63,204 @@
             display: flex;
             gap: 10px;
         }
-        #import-file {
-            display: none;
+        #import-file { display: none; }
+
+        /* --- 4. 主内容区 (表单 + 列表) --- */
+        .project-management-full {
+            flex-grow: 1; /* 填满剩余空间 */
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden; /* 关键：让子元素内部滚动 */
         }
 
-        /* --- 3. 项目管理 (【V4 优化】) --- */
-        #project-management {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-            border-bottom: 1px solid var(--color-border);
-            height: 450px; /* 【V4 更改】设置固定高度 */
+        .section-box {
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 关键 */
         }
-        #project-form-container {
-            border-right: 1px solid var(--color-border);
-            padding-right: 20px;
-            overflow-y: auto; /* 【V4 更改】允许表单滚动 */
+        
+        .section-box h3 {
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: var(--color-primary);
         }
-        #project-list-container {
-            overflow-y: auto;
-            /* 【V4 更改】移除 max-height: 300px; 限制 */
+
+        /* --- 4.1 表单 --- */
+        .project-form-container {
+            overflow-y: auto; /* 表单内容多时滚动 */
         }
+        #project-form .form-group {
+            margin-bottom: 15px;
+        }
+        #project-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        /* --- 4.2 列表 (【V5 优化】带搜索框) --- */
+        .project-list-container {
+            padding: 0; /* 内部管理 padding */
+        }
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 0 20px;
+        }
+        .list-header h3 {
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+        #search-box {
+            width: 250px;
+        }
+        
+        .table-wrapper {
+            flex-grow: 1;
+            overflow-y: auto; /* 列表滚动 */
+            padding: 20px;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
         th, td {
-            border: 1px solid var(--color-border);
-            padding: 8px 12px;
+            border-bottom: 1px solid var(--color-border);
+            padding: 12px 15px;
             text-align: left;
             vertical-align: top;
         }
         th {
-            background-color: var(--color-bg);
+            background-color: var(--color-surface);
+            color: var(--color-text-muted);
             position: sticky;
             top: 0;
+            z-index: 1;
+        }
+        tr:hover {
+            background-color: rgba(100, 255, 218, 0.05);
         }
         td .delete-btn {
-            background: #f44336;
-            border-color: #f44336;
-            font-size: 12px;
-            padding: 4px 8px;
+            background: var(--color-danger);
+            border-color: var(--color-danger);
+        }
+        
+        /* --- 5. V5 按钮样式 --- */
+        button {
+            cursor: pointer;
+            padding: 8px 14px;
+            border: 1px solid var(--color-primary);
+            background-color: var(--color-primary);
+            color: #0a192f; /* 暗色背景配亮色按钮 */
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background-color: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+        }
+        button.secondary {
+            background-color: transparent;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+        }
+        button.secondary:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+            box-shadow: none;
         }
 
-        /* --- 4. 时间轴控制 --- */
+        /* --- 5.1 V5 输入框样式 --- */
+        input[type="text"], input[type="date"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            box-sizing: border-box; 
+            background-color: var(--color-bg); /* 输入框背景 */
+            color: var(--color-text);
+            font-size: 14px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* 反色日期图标 */
+        }
+        
+        /* --- 6. V5 页脚 --- */
+        footer {
+            flex-shrink: 0;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            background-color: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+        }
+
+        /* --- 7. V5 时间轴弹窗 (Modal) --- */
+        #open-timeline-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 50;
+            padding: 12px 20px;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .timeline-content {
+            width: 95%;
+            height: 95%;
+            background: var(--color-bg);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 8. 时间轴控制 (Modal 内) --- */
         #timeline-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background-color: var(--color-bg);
+            background-color: var(--color-surface);
             border-bottom: 1px solid var(--color-border);
+            flex-shrink: 0;
         }
         #timeline-controls .view-toggles, #timeline-controls .navigation {
             display: flex;
@@ -150,12 +270,27 @@
             font-size: 20px;
             font-weight: 600;
             margin: 0;
+            color: var(--color-primary);
+        }
+        #close-timeline-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 24px;
+            font-weight: bold;
+            padding: 0 10px;
+        }
+        #close-timeline-btn:hover {
+            color: var(--color-primary);
+            background: none;
+            box-shadow: none;
         }
 
-        /* --- 5. 时间轴看板 --- */
+        /* --- 9. 时间轴看板 (Modal 内) --- */
         #timeline-kanban {
-            overflow-x: auto; /* 关键：允许水平滚动 */
-            padding: 0 20px 20px 20px;
+            overflow: auto; /* 关键：时间轴自己滚动 */
+            padding: 20px;
+            flex-grow: 1;
         }
         .timeline-grid {
             min-width: 1200px; /* 保证最小宽度 */
@@ -166,7 +301,7 @@
             grid-template-columns: 200px 1fr; /* 200px 用于项目名 */
             position: sticky;
             top: 0;
-            background: #fff;
+            background: var(--color-bg);
             z-index: 10;
             border-bottom: 2px solid var(--color-border);
         }
@@ -175,6 +310,7 @@
             font-weight: 600;
             border-right: 1px solid var(--color-border);
             text-align: center;
+            color: var(--color-text-muted);
         }
         .timeline-header-dates {
             display: grid;
@@ -185,6 +321,7 @@
             font-weight: 600;
             text-align: center;
             border-right: 1px dotted var(--color-border);
+            color: var(--color-text-muted);
         }
         /* 时间轴主体 */
         .timeline-body .project-row {
@@ -193,7 +330,7 @@
             border-bottom: 1px solid var(--color-border);
         }
         .project-row:nth-child(even) {
-            background-color: var(--color-bg);
+            background-color: rgba(30, 42, 71, 0.5); /* 条纹 */
         }
         .project-row .project-name {
             padding: 15px 10px;
@@ -203,6 +340,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: var(--color-text);
         }
         .project-row .project-bar-wrapper {
             position: relative; /* 关键：用于绝对定位项目条 */
@@ -213,10 +351,12 @@
             top: 10px;
             height: 30px;
             background-color: var(--color-primary);
+            border: 1px solid var(--color-primary-dark);
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            color: #0a192f;
             font-size: 12px;
+            font-weight: 600;
             padding: 0 8px;
             line-height: 30px;
             white-space: nowrap;
@@ -228,6 +368,7 @@
         .project-bar:hover {
             opacity: 0.8;
             transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(100, 255, 218, 0.3);
         }
         /* "今天" 的高亮 */
         .timeline-header-cell.today {
@@ -235,23 +376,17 @@
             border: 1px solid var(--color-today-border);
             border-top: none;
             border-bottom: none;
+            color: var(--color-primary);
         }
-        .timeline-grid .today-marker {
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background-color: red;
-            opacity: 0.7;
-            z-index: 5;
-        }
-
+        
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="main-container">
+
         <header>
-            <h1>周期时间看板</h1>
+            <h1>Az Captain Time Cycle Dashboard</h1>
             <div class="io-buttons">
                 <button id="export-btn">导出 .JSON</button>
                 <button id="import-btn" class="secondary">导入 .JSON</button>
@@ -259,8 +394,9 @@
             </div>
         </header>
 
-        <section id="project-management" class="section">
-            <div id="project-form-container">
+        <section class="project-management-full">
+            
+            <div id="project-form-container" class="section-box">
                 <h3>添加/编辑项目</h3>
                 <form id="project-form">
                     <input type="hidden" id="project-id">
@@ -287,60 +423,83 @@
                     <button type="submit">保存项目</button>
                 </form>
             </div>
-            <div id="project-list-container">
-                <h3>项目列表</h3>
-                <table id="project-list-table">
-                    <thead>
-                        <tr>
-                            <th>项目名称</th>
-                            <th>开始时间</th>
-                            <th>周期(天)</th>
-                            <th>结束时间</th>
-                            <th>备注</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="project-list-body">
-                        </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="timeline-controls">
-            <div class="navigation">
-                <button id="prev-btn">◀ 上一页</button>
-                <button id="today-btn" class="secondary">今天</button>
-                <button id="next-btn">下一页 ▶</button>
-            </div>
-
-            <h3 id="current-view-label">2025年 11月</h3>
             
-            <div class="view-toggles">
-                <button class="view-btn secondary" data-view="year">年</button>
-                <button class="view-btn" data-view="month">月</button>
-                <button class="view-btn secondary" data-view="week">周</button>
-                <button class="view-btn secondary" data-view="day">日</button>
+            <div class="project-list-container section-box">
+                <div class="list-header">
+                    <h3>项目列表</h3>
+                    <input type="text" id="search-box" placeholder="搜索项目名称、备注...">
+                </div>
+                <div class="table-wrapper">
+                    <table id="project-list-table">
+                        <thead>
+                            <tr>
+                                <th>项目名称</th>
+                                <th>开始时间</th>
+                                <th>周期(天)</th>
+                                <th>结束时间</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-list-body">
+                            </tbody>
+                    </table>
+                </div>
             </div>
+
         </section>
 
-        <section id="timeline-kanban">
-            <div class="timeline-grid">
-                <div class="timeline-header">
-                    <div class="header-name">项目</div>
-                    <div class="timeline-header-dates" id="timeline-header-dates">
-                        </div>
-                </div>
-                <div class="timeline-body" id="timeline-body">
-                    </div>
-            </div>
-        </section>
+        <footer id="page-footer">
+            @time.haloninja.com
+        </footer>
+
+        <button id="open-timeline-btn">查看看板</button>
 
     </div>
+
+
+    <div id="timeline-modal" class="modal-overlay hidden">
+        <div class="timeline-content">
+            
+            <section id="timeline-controls">
+                <div class="navigation">
+                    <button id="prev-btn">◀ 上一页</button>
+                    <button id="today-btn" class="secondary">今天</button>
+                    <button id="next-btn">下一页 ▶</button>
+                </div>
+
+                <h3 id="current-view-label">2025年 11月</h3>
+                
+                <div class="view-toggles">
+                    <button class="view-btn secondary" data-view="year">年</button>
+                    <button class="view-btn" data-view="month">月</button>
+                    <button class="view-btn secondary" data-view="week">周</button>
+                    <button class="view-btn secondary" data-view="day">日</button>
+                    <button id="close-timeline-btn" title="关闭">×</button>
+                </div>
+            </section>
+
+            <section id="timeline-kanban">
+                <div class="timeline-grid">
+                    <div class="timeline-header">
+                        <div class="header-name">项目</div>
+                        <div class="timeline-header-dates" id="timeline-header-dates">
+                            </div>
+                    </div>
+                    <div class="timeline-body" id="timeline-body">
+                        </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
         // --- 1. DOM 引用 ---
+        // 主页面
         const projectForm = document.getElementById('project-form');
         const projectIdInput = document.getElementById('project-id');
         const projectNameInput = document.getElementById('project-name');
@@ -349,11 +508,18 @@
         const endDateInput = document.getElementById('end-date');
         const notesInput = document.getElementById('notes');
         const projectListBody = document.getElementById('project-list-body');
-        
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
         const importFile = document.getElementById('import-file');
+        const pageFooter = document.getElementById('page-footer');
+        const searchBox = document.getElementById('search-box'); // V5 新增
 
+        // 弹窗 (Modal)
+        const openTimelineBtn = document.getElementById('open-timeline-btn'); // V5 新增
+        const closeTimelineBtn = document.getElementById('close-timeline-btn'); // V5 新增
+        const timelineModal = document.getElementById('timeline-modal'); // V5 新增
+        
+        // 弹窗内部
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const todayBtn = document.getElementById('today-btn');
@@ -366,86 +532,45 @@
         let state = {
             projects: [],
             currentDate: new Date(),
-            currentView: 'month' // 'day', 'week', 'month', 'year'
+            currentView: 'month' 
         };
 
         // --- 3. 日期辅助函数 ---
         const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-        function parseDate(dateStr) {
-            const [year, month, day] = dateStr.split('-').map(Number);
-            return new Date(year, month - 1, day);
-        }
-
-        function formatDate(date) {
-            return date.toISOString().split('T')[0];
-        }
-
-        function addDays(date, days) {
-            const newDate = new Date(date.getTime());
-            newDate.setDate(newDate.getDate() + days);
-            return newDate;
-        }
-
-        function addMonths(date, months) {
-            const newDate = new Date(date.getTime());
-            newDate.setMonth(newDate.getMonth() + months);
-            return newDate;
-        }
-
-        function addYears(date, years) {
-            const newDate = new Date(date.getTime());
-            newDate.setFullYear(newDate.getFullYear() + years);
-            return newDate;
-        }
-
-        function getDaysDiff(date1, date2) {
-            const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
-            const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
-            return Math.round((d1 - d2) / MS_PER_DAY);
-        }
-
-        function getDaysInMonth(date) {
-            return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        }
-
-        function getStartOfWeek(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // day === 0 是周日
-            return new Date(d.setDate(diff));
-        }
-
-        function getStartOfMonth(date) {
-            return new Date(date.getFullYear(), date.getMonth(), 1);
-        }
-
-        function getStartOfYear(date) {
-            return new Date(date.getFullYear(), 0, 1);
-        }
+        function parseDate(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); }
+        function formatDate(date) { return date.toISOString().split('T')[0]; }
+        function addDays(date, days) { const n = new Date(date.getTime()); n.setDate(n.getDate() + days); return n; }
+        function addMonths(date, months) { const n = new Date(date.getTime()); n.setMonth(n.getMonth() + months); return n; }
+        function addYears(date, years) { const n = new Date(date.getTime()); n.setFullYear(n.getFullYear() + years); return n; }
+        function getDaysDiff(d1, d2) { const d_1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate()); const d_2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate()); return Math.round((d_1 - d_2) / MS_PER_DAY); }
+        function getDaysInMonth(date) { return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(); }
+        function getStartOfWeek(date) { const d = new Date(date); const day = d.getDay(); const diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+        function getStartOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
+        function getStartOfYear(date) { return new Date(date.getFullYear(), 0, 1); }
 
         // --- 4. 状态管理 (LocalStorage) ---
-        function saveState() {
-            localStorage.setItem('timelineProjects', JSON.stringify(state.projects));
-        }
+        function saveState() { localStorage.setItem('timelineProjects', JSON.stringify(state.projects)); }
+        function loadState() { const p = localStorage.getItem('timelineProjects'); if (p) state.projects = JSON.parse(p); }
 
-        function loadState() {
-            const projects = localStorage.getItem('timelineProjects');
-            if (projects) {
-                state.projects = JSON.parse(projects);
-            }
-        }
+        // --- 5. V5 渲染逻辑 (分离) ---
 
-        // --- 5. 核心渲染逻辑 ---
-        
-        // 5.1 渲染项目列表 (表格)
-        function renderProjectList() {
+        // 5.1 渲染主视图 (列表 + 搜索)
+        function renderMainView() {
             projectListBody.innerHTML = '';
-            if (state.projects.length === 0) {
+            
+            const filterText = searchBox.value.toLowerCase();
+            const filteredProjects = state.projects.filter(p => 
+                p.name.toLowerCase().includes(filterText) || 
+                p.notes.toLowerCase().includes(filterText) ||
+                p.start.includes(filterText) ||
+                p.end.includes(filterText)
+            );
+
+            if (filteredProjects.length === 0) {
                 projectListBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无项目</td></tr>';
                 return;
             }
-            state.projects.forEach(p => {
+            filteredProjects.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${p.name}</td>
@@ -462,18 +587,27 @@
             });
         }
 
-        // 5.2 渲染时间轴 (主函数)
-        function renderTimeline() {
+        // 5.2 渲染弹窗视图 (时间轴)
+        function renderModalView() {
             timelineHeaderDates.innerHTML = '';
             timelineBody.innerHTML = '';
             
             viewBtns.forEach(btn => {
-                if (btn.dataset.view === state.currentView) {
-                    btn.classList.remove('secondary');
-                } else {
-                    btn.classList.add('secondary');
+                if(btn.id === 'close-timeline-btn') return;
+                btn.classList.toggle('secondary', btn.dataset.view !== state.currentView);
+                btn.classList.toggle('primary', btn.dataset.view === state.currentView); // A non-standard class, let's fix style
+            });
+            // V5 样式修复: 确保按钮样式正确切换
+            viewBtns.forEach(btn => {
+                if (btn.dataset.view) {
+                    if (btn.dataset.view === state.currentView) {
+                        btn.classList.remove('secondary'); // 激活
+                    } else {
+                        btn.classList.add('secondary'); // 非激活
+                    }
                 }
             });
+
 
             switch (state.currentView) {
                 case 'day': renderDayView(); break;
@@ -483,15 +617,13 @@
             }
         }
 
-        // 5.2.1 渲染 "日" 视图 (24小时)
+        // 5.2.1-5.2.4 (渲染 日/周/月/年 视图) - (无V5更改，代码折叠)
         function renderDayView() {
             const today = state.currentDate;
             const viewStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const viewEnd = addDays(viewStart, 1);
-            
             currentViewLabel.textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日`;
             timelineHeaderDates.style.gridTemplateColumns = `repeat(24, 1fr)`;
-
             for (let i = 0; i < 24; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'timeline-header-cell';
@@ -500,115 +632,80 @@
             }
             renderProjectBars(viewStart, viewEnd, 'hour');
         }
-
-        // 5.2.2 渲染 "周" 视图 (7天)
         function renderWeekView() {
             const weekStart = getStartOfWeek(state.currentDate);
             const viewStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
             const viewEnd = addDays(viewStart, 7);
-            
             currentViewLabel.textContent = `${weekStart.getFullYear()}年 ${weekStart.getMonth() + 1}月 ${weekStart.getDate()}日 - ${addDays(weekStart, 6).getDate()}日`;
             timelineHeaderDates.style.gridTemplateColumns = `repeat(7, 1fr)`;
-
             const today = new Date();
             for (let i = 0; i < 7; i++) {
                 const day = addDays(weekStart, i);
                 const cell = document.createElement('div');
                 cell.className = 'timeline-header-cell';
                 cell.textContent = `${day.getMonth() + 1}/${day.getDate()}`;
-                if (getDaysDiff(day, today) === 0) {
-                    cell.classList.add('today');
-                }
+                if (getDaysDiff(day, today) === 0) cell.classList.add('today');
                 timelineHeaderDates.appendChild(cell);
             }
             renderProjectBars(viewStart, viewEnd, 'day');
         }
-
-        // 5.2.3 渲染 "月" 视图 (当月天数)
         function renderMonthView() {
             const monthStart = getStartOfMonth(state.currentDate);
             const daysInMonth = getDaysInMonth(monthStart);
             const viewStart = new Date(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate());
             const viewEnd = addDays(viewStart, daysInMonth);
-
             currentViewLabel.textContent = `${monthStart.getFullYear()}年 ${monthStart.getMonth() + 1}月`;
             timelineHeaderDates.style.gridTemplateColumns = `repeat(${daysInMonth}, 1fr)`;
-
             const today = new Date();
             for (let i = 1; i <= daysInMonth; i++) {
                 const day = new Date(monthStart.getFullYear(), monthStart.getMonth(), i);
                 const cell = document.createElement('div');
                 cell.className = 'timeline-header-cell';
                 cell.textContent = i;
-                if (getDaysDiff(day, today) === 0) {
-                    cell.classList.add('today');
-                }
+                if (getDaysDiff(day, today) === 0) cell.classList.add('today');
                 timelineHeaderDates.appendChild(cell);
             }
             renderProjectBars(viewStart, viewEnd, 'day');
         }
-
-        // 5.2.4 渲染 "年" 视图 (12个月)
         function renderYearView() {
             const yearStart = getStartOfYear(state.currentDate);
             const viewStart = new Date(yearStart.getFullYear(), 0, 1);
             const viewEnd = addYears(viewStart, 1);
-
             currentViewLabel.textContent = `${yearStart.getFullYear()}年`;
             timelineHeaderDates.style.gridTemplateColumns = `repeat(12, 1fr)`;
-            
             const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
             const today = new Date();
             for (let i = 0; i < 12; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'timeline-header-cell';
                 cell.textContent = months[i];
-                if (today.getFullYear() === yearStart.getFullYear() && today.getMonth() === i) {
-                     cell.classList.add('today');
-                }
+                if (today.getFullYear() === yearStart.getFullYear() && today.getMonth() === i) cell.classList.add('today');
                 timelineHeaderDates.appendChild(cell);
             }
             renderProjectBars(viewStart, viewEnd, 'month');
         }
 
-        // 5.2.5 渲染项目条 (通用逻辑)
+        // 5.2.5 渲染项目条 (通用逻辑) - (无V5更改，代码折叠)
         function renderProjectBars(viewStart, viewEnd, unit) {
             const viewDuration = viewEnd.getTime() - viewStart.getTime();
-
             state.projects.forEach(project => {
                 const projStart = parseDate(project.start);
                 const projEnd = parseDate(project.end);
-
-                if (projEnd.getTime() < viewStart.getTime() || projStart.getTime() > viewEnd.getTime()) {
-                    return;
-                }
-
+                if (projEnd.getTime() < viewStart.getTime() || projStart.getTime() > viewEnd.getTime()) return;
                 const barStart = Math.max(projStart.getTime(), viewStart.getTime());
                 const barEnd = Math.min(projEnd.getTime() + MS_PER_DAY, viewEnd.getTime());
-
                 const left = ((barStart - viewStart.getTime()) / viewDuration) * 100;
                 const width = ((barEnd - barStart) / viewDuration) * 100;
-
                 const row = document.createElement('div');
                 row.className = 'project-row';
-
-                const nameCell = document.createElement('div');
-                nameCell.className = 'project-name';
-                nameCell.textContent = project.name;
-                row.appendChild(nameCell);
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'project-bar-wrapper';
-
-                const bar = document.createElement('div');
-                bar.className = 'project-bar';
-                bar.style.left = `${left}%`;
-                bar.style.width = `${width}%`;
-                bar.textContent = project.name;
-                bar.title = `${project.name}\n开始: ${project.start}\n结束: ${project.end}\n备注: ${project.notes}`;
-
-                wrapper.appendChild(bar);
-                row.appendChild(wrapper);
+                row.innerHTML = `
+                    <div class="project-name">${project.name}</div>
+                    <div class="project-bar-wrapper">
+                        <div class="project-bar" style="left: ${left}%; width: ${width}%;" 
+                             title="${project.name}\n开始: ${project.start}\n结束: ${project.end}\n备注: ${project.notes}">
+                            ${project.name}
+                        </div>
+                    </div>`;
                 timelineBody.appendChild(row);
             });
         }
@@ -618,7 +715,6 @@
         // 6.1 表单提交 (添加/更新)
         projectForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
             const id = projectIdInput.value;
             const projectData = {
                 name: projectNameInput.value,
@@ -627,53 +723,41 @@
                 end: endDateInput.value,
                 notes: notesInput.value,
             };
-
             if (id) {
                 const index = state.projects.findIndex(p => p.id === id);
-                if (index !== -1) {
-                    state.projects[index] = { ...state.projects[index], ...projectData };
-                }
+                if (index !== -1) state.projects[index] = { ...state.projects[index], ...projectData };
             } else {
                 projectData.id = Date.now().toString();
                 state.projects.push(projectData);
             }
-            
             saveState();
-            render();
+            renderMainView(); // V5 更改: 只渲染主视图
             projectForm.reset();
             projectIdInput.value = '';
             initFormDates();
         });
 
-
-        // 6.2 自动计算 (三向关联)
+        // 6.2 自动计算 (三向关联) - (无V5更改，代码折叠)
         function calculateEndDate() {
             if (!startDateInput.value || !cycleDaysInput.value) return;
             const startDate = parseDate(startDateInput.value);
             let days = parseInt(cycleDaysInput.value);
-            if (days < 1) {
-                days = 1;
-                cycleDaysInput.value = 1;
-            }
+            if (days < 1) { days = 1; cycleDaysInput.value = 1; }
             const endDate = addDays(startDate, days - 1);
             endDateInput.value = formatDate(endDate);
         }
-
         function calculateCycleDays() {
             if (!startDateInput.value || !endDateInput.value) return;
             const startDate = parseDate(startDateInput.value);
             const endDate = parseDate(endDateInput.value);
-
             if (endDate.getTime() < startDate.getTime()) {
                 endDateInput.value = startDateInput.value;
                 cycleDaysInput.value = 1;
                 return;
             }
-            
             const diff = getDaysDiff(endDate, startDate);
             cycleDaysInput.value = diff + 1;
         }
-        
         startDateInput.addEventListener('change', calculateEndDate);
         cycleDaysInput.addEventListener('input', calculateEndDate);
         endDateInput.addEventListener('change', calculateCycleDays);
@@ -682,12 +766,11 @@
         projectListBody.addEventListener('click', (e) => {
             const id = e.target.dataset.id;
             if (!id) return;
-
             if (e.target.classList.contains('delete-btn')) {
                 if (confirm('确定要删除这个项目吗？')) {
                     state.projects = state.projects.filter(p => p.id !== id);
                     saveState();
-                    render();
+                    renderMainView(); // V5 更改: 只渲染主视图
                 }
             } else if (e.target.classList.contains('edit-btn')) {
                 const project = state.projects.find(p => p.id === id);
@@ -702,29 +785,23 @@
             }
         });
 
-        // 6.4 导入/导出
+        // 6.4 导入/导出 - (无V5更改，代码折叠)
         exportBtn.addEventListener('click', () => {
             const today = new Date();
             const dateString = formatDate(today).replace(/-/g, ''); 
             const filename = `time${dateString}.json`;
-
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.projects, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", filename); 
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", filename); 
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         });
-
-        importBtn.addEventListener('click', () => {
-            importFile.click();
-        });
-
+        importBtn.addEventListener('click', () => { importFile.click(); });
         importFile.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
@@ -732,69 +809,71 @@
                     if (Array.isArray(importedProjects)) {
                         state.projects = importedProjects;
                         saveState();
-                        render();
+                        renderMainView(); // V5 更改: 只渲染主视图
                         alert('导入成功！');
-                    } else {
-                        alert('导入失败：JSON 文件格式不正确。');
-                    }
-                } catch (err) {
-                    alert('导入失败：' + err.message);
-                }
+                    } else { alert('导入失败：JSON 文件格式不正确。'); }
+                } catch (err) { alert('导入失败：' + err.message); }
                 importFile.value = '';
             };
             reader.readAsText(file);
         });
+        
+        // 6.5 V5 弹窗控制
+        openTimelineBtn.addEventListener('click', () => {
+            timelineModal.classList.remove('hidden');
+            renderModalView(); // V5 更改: 打开时才渲染
+        });
+        closeTimelineBtn.addEventListener('click', () => {
+            timelineModal.classList.add('hidden');
+        });
 
-        // 6.5 视图切换
+        // 6.6 V5 搜索框
+        searchBox.addEventListener('input', renderMainView);
+
+        // 6.7 弹窗内：视图切换
         viewBtns.forEach(btn => {
+            if(btn.id === 'close-timeline-btn') return;
             btn.addEventListener('click', () => {
                 state.currentView = btn.dataset.view;
-                renderTimeline();
+                renderModalView(); // V5 更改: 渲染弹窗视图
             });
         });
 
-        // 6.6 导航
+        // 6.8 弹窗内：导航
         prevBtn.addEventListener('click', () => navigate(-1));
         nextBtn.addEventListener('click', () => navigate(1));
         todayBtn.addEventListener('click', () => navigate(0));
-
         function navigate(direction) {
             if (direction === 0) {
                 state.currentDate = new Date();
             } else {
                 switch (state.currentView) {
-                    case 'day':
-                        state.currentDate = addDays(state.currentDate, direction);
-                        break;
-                    case 'week':
-                        state.currentDate = addDays(state.currentDate, direction * 7);
-                        break;
-                    case 'month':
-                        state.currentDate = addMonths(state.currentDate, direction);
-                        break;
-                    case 'year':
-                        state.currentDate = addYears(state.currentDate, direction);
-                        break;
+                    case 'day': state.currentDate = addDays(state.currentDate, direction); break;
+                    case 'week': state.currentDate = addDays(state.currentDate, direction * 7); break;
+                    case 'month': state.currentDate = addMonths(state.currentDate, direction); break;
+                    case 'year': state.currentDate = addYears(state.currentDate, direction); break;
                 }
             }
-            renderTimeline();
+            renderModalView(); // V5 更改: 渲染弹窗视图
         }
 
         // --- 7. 初始化 ---
-        function render() {
-            renderProjectList();
-            renderTimeline();
-        }
-
         function initFormDates() {
             startDateInput.value = formatDate(new Date());
             calculateEndDate();
         }
+        
+        function initFooter() {
+            // V5 更改: 动态设置页脚
+            const host = window.location.host || 'time.haloninja.com';
+            pageFooter.textContent = `@${host}`;
+        }
 
         function init() {
             loadState();
-            render();
+            renderMainView(); // V5 更改: 只渲染主视图
             initFormDates();
+            initFooter();
         }
 
         init();
