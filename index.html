@@ -573,8 +573,58 @@
         .col-progress { min-width: 130px; }
         .col-notes { max-width: 200px; color: var(--text-muted); font-size: 12px; }
         .col-actions { white-space: nowrap; }
+        .col-cost { white-space: nowrap; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; min-width: 90px; }
+        .col-cost .cost-value { font-weight: 600; color: var(--text); }
+        .col-cost .cost-empty { color: var(--text-faint); font-size: 11px; }
+        .col-cost .cost-period { font-size: 10px; color: var(--text-faint); margin-left: 2px; }
 
-        /* ─── 分类徽标 ─── */
+        /* ─── 每日成本汇总条 ─── */
+        .cost-summary-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .cost-summary-item {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .cost-summary-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+        .cost-summary-value {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+        .cost-summary-currency {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .cost-summary-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+        }
+        .cost-summary-meta {
+            font-size: 11px;
+            color: var(--text-faint);
+            margin-left: auto;
+        }
+        .cost-summary-meta strong {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
         .cat-badge {
             display: inline-flex;
             align-items: center;
@@ -1113,6 +1163,24 @@
                             <label for="notes">备注</label>
                             <textarea id="notes" rows="2" placeholder="项目备注（可选）"></textarea>
                         </div>
+
+                        <div class="form-section-label" style="margin-top:16px;">成本配置</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cost-amount">成本金额 <span style="color:var(--text-faint);font-size:10px;">CNY</span></label>
+                                <input type="number" id="cost-amount" min="0" step="0.01" placeholder="0.00" style="font-family:'DM Mono',monospace;">
+                            </div>
+                            <div class="form-group">
+                                <label for="cost-period">计费周期</label>
+                                <select id="cost-period">
+                                    <option value="">— 无 —</option>
+                                    <option value="day">按日</option>
+                                    <option value="month">按月</option>
+                                    <option value="year">按年</option>
+                                </select>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="form-actions">
@@ -1138,6 +1206,25 @@
 
         <!-- ─── 主面板 ─── -->
         <main class="main-panel">
+
+            <!-- 每日成本汇总条 -->
+            <div class="cost-summary-bar" id="cost-summary-bar">
+                <div class="cost-summary-item">
+                    <span class="cost-summary-label">每日成本</span>
+                    <span class="cost-summary-value" id="daily-cost-total">¥0.00</span>
+                </div>
+                <div class="cost-summary-divider"></div>
+                <div class="cost-summary-item">
+                    <span class="cost-summary-label">每月成本</span>
+                    <span class="cost-summary-value" id="monthly-cost-total" style="font-size:15px;color:var(--text-muted);">¥0.00</span>
+                </div>
+                <div class="cost-summary-divider"></div>
+                <div class="cost-summary-item">
+                    <span class="cost-summary-label">每年成本</span>
+                    <span class="cost-summary-value" id="yearly-cost-total" style="font-size:15px;color:var(--text-muted);">¥0.00</span>
+                </div>
+                <span class="cost-summary-meta" id="cost-summary-meta"></span>
+            </div>
 
             <!-- 工具栏 -->
             <div class="list-toolbar">
@@ -1169,6 +1256,7 @@
                             <th class="sortable col-days" data-sort="days">天数</th>
                             <th class="sortable col-date" data-sort="end">结束时间</th>
                             <th class="sortable col-progress" data-sort="progress">进度</th>
+                            <th class="col-cost">日均成本</th>
                             <th class="col-notes">备注</th>
                             <th class="col-actions">操作</th>
                         </tr>
@@ -1419,6 +1507,8 @@ async function initApp() {
     const cycleDaysInput = document.getElementById('cycle-days');
     const endDateInput = document.getElementById('end-date');
     const notesInput = document.getElementById('notes');
+    const costAmountInput = document.getElementById('cost-amount');
+    const costPeriodInput = document.getElementById('cost-period');
     const saveBtn = document.getElementById('save-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     const projectListBody = document.getElementById('project-list-body');
@@ -1535,6 +1625,42 @@ async function initApp() {
         if (today>end) return 'overdue';
         if (today<start) return 'pending';
         return 'active';
+    }
+
+    // ─── 成本计算 ─── //
+    function getDailyCost(p) {
+        if (!p.cost || !p.costPeriod) return 0;
+        const amount = parseFloat(p.cost);
+        if (isNaN(amount) || amount <= 0) return 0;
+        switch (p.costPeriod) {
+            case 'day':   return amount;
+            case 'month': return amount * 12 / 365;
+            case 'year':  return amount / 365;
+            default:      return 0;
+        }
+    }
+    function formatCost(n) {
+        if (n === 0) return '0.00';
+        if (n < 0.01) return n.toFixed(4);
+        if (n < 100) return n.toFixed(2);
+        return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function updateCostSummary() {
+        let dailyTotal = 0;
+        let projectCount = 0;
+        state.projects.forEach(p => {
+            const dc = getDailyCost(p);
+            if (dc > 0) { dailyTotal += dc; projectCount++; }
+        });
+        const monthlyTotal = dailyTotal * 365 / 12;
+        const yearlyTotal = dailyTotal * 365;
+        document.getElementById('daily-cost-total').textContent = '¥' + formatCost(dailyTotal);
+        document.getElementById('monthly-cost-total').textContent = '¥' + formatCost(monthlyTotal);
+        document.getElementById('yearly-cost-total').textContent = '¥' + formatCost(yearlyTotal);
+        document.getElementById('cost-summary-meta').innerHTML =
+            projectCount > 0
+                ? `<strong>${projectCount}</strong> 个项目已配置成本`
+                : '暂无项目配置成本';
     }
 
     // ═══════════════════════════════════════════════════ //
@@ -1880,6 +2006,7 @@ async function initApp() {
         updateSortHeaders();
         renderCatFilterBar();
         updateCategorySelect();
+        updateCostSummary();
 
         const filterText = searchBox.value.toLowerCase().trim();
 
@@ -1913,7 +2040,7 @@ async function initApp() {
                 ? '在左侧填写信息后点击「保存项目」即可开始'
                 : '请尝试修改搜索条件或分类筛选';
             projectListBody.innerHTML = `
-                <tr><td colspan="8">
+                <tr><td colspan="9">
                     <div class="empty-state">
                         <div class="empty-state-icon">\uD83D\uDCCB</div>
                         <div class="empty-state-title">${emptyTitle}</div>
@@ -1950,6 +2077,11 @@ async function initApp() {
                         <span class="progress-text ${status==='done'?'s-done':status==='overdue'?'s-overdue':''}">${progress}%</span>
                     </div>
                 </td>
+                <td class="col-cost">${(() => {
+                    const dc = getDailyCost(p);
+                    if (dc > 0) return `<span class="cost-value">¥${formatCost(dc)}</span><span class="cost-period">/日</span>`;
+                    return '<span class="cost-empty">—</span>';
+                })()}</td>
                 <td class="col-notes" title="${p.notes||''}">${p.notes ? p.notes.slice(0,40)+(p.notes.length>40?'\u2026':'') : ''}</td>
                 <td class="col-actions">
                     <button class="action-btn edit-btn" data-id="${p.id}" title="编辑">\u270E</button>
@@ -2215,6 +2347,8 @@ async function initApp() {
             days: parseInt(cycleDaysInput.value),
             end: endDateInput.value,
             notes: notesInput.value.trim(),
+            cost: costAmountInput.value ? parseFloat(costAmountInput.value) : null,
+            costPeriod: costPeriodInput.value || null,
         };
         if (id) {
             const idx = state.projects.findIndex(p => p.id === id);
@@ -2236,6 +2370,8 @@ async function initApp() {
         cancelBtn.style.display = 'none';
         saveBtn.textContent = '保存项目';
         formTitle.textContent = '基本信息';
+        costAmountInput.value = '';
+        costPeriodInput.value = '';
         initFormDates();
     }
     cancelBtn.addEventListener('click', resetForm);
@@ -2277,6 +2413,8 @@ async function initApp() {
             cycleDaysInput.value = p.days;
             endDateInput.value = p.end;
             notesInput.value = p.notes || '';
+            costAmountInput.value = p.cost || '';
+            costPeriodInput.value = p.costPeriod || '';
             cancelBtn.style.display = '';
             saveBtn.textContent = '更新项目';
             formTitle.textContent = '编辑项目';
