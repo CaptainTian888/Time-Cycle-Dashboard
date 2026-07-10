@@ -554,16 +554,16 @@
         .col-progress { min-width: 130px; }
         .col-notes { max-width: 200px; color: var(--text-muted); font-size: 12px; }
         .col-actions { white-space: nowrap; }
-        .col-cost { white-space: nowrap; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; min-width: 100px; }
+        .col-cost { white-space: nowrap; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; min-width: 110px; }
         .col-cost .cost-value { font-weight: 600; color: var(--text); }
         .col-cost .cost-display { cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background .15s; }
         .col-cost .cost-display:hover { background: var(--surface-2); }
         .col-cost .cost-display .cost-period { font-size: 10px; color: var(--text-faint); margin-left: 1px; }
         .col-cost .cost-empty { color: var(--text-faint); font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background .15s; }
         .col-cost .cost-empty:hover { background: var(--surface-2); color: var(--text-muted); }
-        .col-cost .cost-inline-edit { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+        .col-cost .cost-inline-edit { display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
         .col-cost .cost-inline-edit input {
-            width: 60px; padding: 2px 4px;
+            padding: 2px 3px;
             border: 1px solid var(--primary);
             border-radius: 4px;
             background: var(--surface);
@@ -572,6 +572,8 @@
             font-size: 12px;
             text-align: right;
         }
+        .col-cost .cost-inline-edit .cost-amount-input { width: 50px; }
+        .col-cost .cost-inline-edit .cost-count-input { width: 30px; text-align: center; border-color: var(--border); }
         .col-cost .cost-inline-edit select {
             padding: 2px 4px;
             border: 1px solid var(--border);
@@ -1165,18 +1167,22 @@
 
                         <div class="form-section-label" style="margin-top:16px;">成本配置</div>
 
-                        <div class="form-row">
+                        <div class="form-row" style="grid-template-columns:1fr 0.4fr 0.6fr;">
                             <div class="form-group">
                                 <label for="cost-amount">成本金额 <span style="color:var(--text-faint);font-size:10px;">CNY</span></label>
                                 <input type="number" id="cost-amount" min="0" step="0.01" placeholder="0.00" style="font-family:'DM Mono',monospace;">
                             </div>
                             <div class="form-group">
-                                <label for="cost-period">计费周期</label>
+                                <label for="cost-period-count">周期数</label>
+                                <input type="number" id="cost-period-count" min="1" value="1" step="1" style="font-family:'DM Mono',monospace;">
+                            </div>
+                            <div class="form-group">
+                                <label for="cost-period">计费单位</label>
                                 <select id="cost-period">
                                     <option value="">— 无 —</option>
-                                    <option value="day">按日</option>
-                                    <option value="month">按月</option>
-                                    <option value="year">按年</option>
+                                    <option value="day">日</option>
+                                    <option value="month">月</option>
+                                    <option value="year">年</option>
                                 </select>
                             </div>
                         </div>
@@ -1451,6 +1457,7 @@ async function initApp() {
     const endDateInput = document.getElementById('end-date');
     const notesInput = document.getElementById('notes');
     const costAmountInput = document.getElementById('cost-amount');
+    const costPeriodCountInput = document.getElementById('cost-period-count');
     const costPeriodInput = document.getElementById('cost-period');
     const saveBtn = document.getElementById('save-btn');
     const cancelBtn = document.getElementById('cancel-btn');
@@ -1567,10 +1574,11 @@ async function initApp() {
         if (!p.cost || !p.costPeriod) return 0;
         const amount = parseFloat(p.cost);
         if (isNaN(amount) || amount <= 0) return 0;
+        const count = p.costPeriodCount && p.costPeriodCount > 0 ? p.costPeriodCount : 1;
         switch (p.costPeriod) {
-            case 'day':   return amount;
-            case 'month': return amount * 12 / 365;
-            case 'year':  return amount / 365;
+            case 'day':   return amount / count;
+            case 'month': return amount * 12 / (count * 365);
+            case 'year':  return amount / (count * 365);
             default:      return 0;
         }
     }
@@ -1762,6 +1770,8 @@ async function initApp() {
                 proj.category = existing.id;
             }
             if (proj.category === undefined || proj.category === null) proj.category = '';
+            // 兼容旧数据：补充 costPeriodCount 字段
+            if (proj.cost && proj.costPeriod && !proj.costPeriodCount) proj.costPeriodCount = 1;
         });
     }
 
@@ -1991,7 +2001,8 @@ async function initApp() {
                         ${(() => {
                             if (p.cost && p.costPeriod) {
                                 const periodLabel = { day:'日', month:'月', year:'年' }[p.costPeriod] || '';
-                                return `<span class="cost-display" data-id="${p.id}" title="点击编辑">¥${formatCost(parseFloat(p.cost))}<span class="cost-period">/${periodLabel}</span></span>`;
+                                const count = p.costPeriodCount && p.costPeriodCount > 1 ? p.costPeriodCount : '';
+                                return `<span class="cost-display" data-id="${p.id}" title="点击编辑">¥${formatCost(parseFloat(p.cost))}<span class="cost-period">/${count}${periodLabel}</span></span>`;
                             }
                             return '<span class="cost-empty" data-id="' + p.id + '" title="点击添加">—</span>';
                         })()}
@@ -2188,6 +2199,7 @@ async function initApp() {
             notes: notesInput.value.trim(),
             cost: costAmountInput.value ? parseFloat(costAmountInput.value) : null,
             costPeriod: costPeriodInput.value || null,
+            costPeriodCount: costPeriodInput.value ? (parseInt(costPeriodCountInput.value) || 1) : null,
         };
         if (id) {
             const idx = state.projects.findIndex(p => p.id === id);
@@ -2210,6 +2222,7 @@ async function initApp() {
         saveBtn.textContent = '保存项目';
         formTitle.textContent = '基本信息';
         costAmountInput.value = '';
+        costPeriodCountInput.value = 1;
         costPeriodInput.value = '';
         initFormDates();
     }
@@ -2253,6 +2266,7 @@ async function initApp() {
             endDateInput.value = p.end;
             notesInput.value = p.notes || '';
             costAmountInput.value = p.cost || '';
+            costPeriodCountInput.value = p.costPeriodCount || 1;
             costPeriodInput.value = p.costPeriod || '';
             cancelBtn.style.display = '';
             saveBtn.textContent = '更新项目';
@@ -2277,11 +2291,13 @@ async function initApp() {
         const cell = target.closest('.col-cost');
         const currentCost = p.cost || '';
         const currentPeriod = p.costPeriod || '';
+        const currentCount = p.costPeriodCount || 1;
 
         cell.innerHTML = `
             <div class="cost-inline-edit">
-                <input type="number" min="0" step="0.01" value="${currentCost}" placeholder="0" data-id="${id}">
-                <select data-id="${id}">
+                <input type="number" min="0" step="0.01" value="${currentCost}" placeholder="0" data-id="${id}" class="cost-amount-input">
+                <input type="number" min="1" step="1" value="${currentCount}" class="cost-count-input" title="周期数">
+                <select data-id="${id}" class="cost-period-select">
                     <option value="" ${!currentPeriod?'selected':''}>—</option>
                     <option value="day" ${currentPeriod==='day'?'selected':''}>日</option>
                     <option value="month" ${currentPeriod==='month'?'selected':''}>月</option>
@@ -2289,18 +2305,21 @@ async function initApp() {
                 </select>
             </div>
         `;
-        const input = cell.querySelector('input');
-        const select = cell.querySelector('select');
+        const input = cell.querySelector('.cost-amount-input');
+        const countInput = cell.querySelector('.cost-count-input');
+        const select = cell.querySelector('.cost-period-select');
         input.focus();
         input.select();
 
         function saveCost() {
             const val = input.value.trim();
             const period = select.value;
+            const count = parseInt(countInput.value) || 1;
             const proj = state.projects.find(p => p.id === id);
             if (!proj) return;
             proj.cost = val ? parseFloat(val) : null;
             proj.costPeriod = period || null;
+            proj.costPeriodCount = period ? count : null;
             saveState();
             renderMainView();
         }
@@ -2313,9 +2332,14 @@ async function initApp() {
         }
 
         input.addEventListener('blur', handleSave);
+        countInput.addEventListener('blur', handleSave);
         select.addEventListener('blur', handleSave);
         input.addEventListener('keydown', (ev) => {
             if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+            if (ev.key === 'Escape') { saved = true; renderMainView(); }
+        });
+        countInput.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); countInput.blur(); }
             if (ev.key === 'Escape') { saved = true; renderMainView(); }
         });
         select.addEventListener('change', () => { input.blur(); });
@@ -2324,12 +2348,17 @@ async function initApp() {
     // 导出 / 导入
     exportBtn.addEventListener('click', () => {
         const dateStr = formatDate(new Date()).replace(/-/g,'');
-        const data = { projects: state.projects, categories: state.categories };
+        const data = {
+            exportedAt: new Date().toISOString(),
+            version: 2,
+            projects: state.projects,
+            categories: state.categories
+        };
         const a = document.createElement('a');
         a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
         a.download = `time${dateStr}.json`;
         document.body.appendChild(a); a.click(); a.remove();
-        showToast(`已导出 time${dateStr}.json`, 'success');
+        showToast(`已导出 time${dateStr}.json（含 ${state.projects.length} 个项目）`, 'success');
     });
     importBtn.addEventListener('click', () => importFile.click());
     importFile.addEventListener('change', (e) => {
