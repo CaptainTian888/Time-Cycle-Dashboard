@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# WorkBuddy
+.workbuddy/
+
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+
+# 原始明文数据（不可推送）
+time20260706.json
+
+# 嵌套旧目录
+Time-Cycle-Dashboard-main/

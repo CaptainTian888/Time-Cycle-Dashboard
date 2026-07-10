@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Cycle Dashboard</title>
+    <link rel="icon" href="https://imagehub.tianzeqi.dev/file/favicon/1766540958291_7.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ─── 主题系统 ─── */
+        [data-theme="light"] {
+            --bg: #f5f4f0;
+            --surface: #ffffff;
+            --surface-2: #f0efe9;
+            --text: #1a1916;
+            --text-muted: #7a7870;
+            --text-faint: #b0aea6;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-soft: rgba(37,99,235,0.10);
+            --border: #e4e2dc;
+            --border-strong: #c9c7c0;
+            --danger: #dc2626;
+            --danger-soft: rgba(220,38,38,0.08);
+            --success: #16a34a;
+            --today-bg: #fffbeb;
+            --today-border: #fbbf24;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+            --cat-manage-bg: #fff;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0d0d10;
+            --surface: #18181f;
+            --surface-2: #1f1f28;
+            --text: #e8e6f0;
+            --text-muted: #7c7a8a;
+            --text-faint: #4a4856;
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --primary-soft: rgba(129,140,248,0.12);
+            --border: #2a2a35;
+            --border-strong: #3a3a48;
+            --danger: #f87171;
+            --danger-soft: rgba(248,113,113,0.08);
+            --success: #4ade80;
+            --today-bg: rgba(129,140,248,0.08);
+            --today-border: var(--primary);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+            --cat-manage-bg: #18181f;
+        }
+
+        /* ─── 全局 ─── */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html, body { height:100%; overflow:hidden; }
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background .25s, color .25s;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ─── 密码门 ─── */
+        .password-gate {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity .3s;
+        }
+        .password-gate.hidden { opacity: 0; pointer-events: none; }
+        .password-card {
+            text-align: center;
+            padding: 40px;
+            max-width: 380px;
+            width: 90%;
+        }
+        .password-icon {
+            width: 64px; height: 64px;
+            margin: 0 auto 20px;
+            background: var(--primary-soft);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px;
+        }
+        .password-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        .password-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+        .password-input-wrap {
+            display: flex;
+            gap: 8px;
+        }
+        .password-input-wrap input {
+            flex: 1;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+        .password-input-wrap button {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .password-error {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 18px;
+            font-weight: 500;
+        }
+
+        /* ─── 主布局 ─── */
+        .app { display:flex; flex-direction:column; height:100vh; }
+
+        /* ─── 头部 ─── */
+        header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding: 0 24px;
+            height: 56px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 20;
+            gap: 16px;
+        }
+        .header-brand {
+            display: flex; align-items: center; gap: 10px;
+            flex-shrink: 0;
+        }
+        .brand-icon {
+            width: 28px; height: 28px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            color: #fff;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            white-space: nowrap;
+        }
+        .header-divider {
+            width: 1px; height: 20px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+        .header-controls { display:flex; gap:8px; align-items:center; }
+        #import-file { display:none; }
+
+        /* ─── 图标按钮 ─── */
+        .icon-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12.5px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .icon-btn:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: none;
+            box-shadow: none;
+        }
+        .icon-btn.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .icon-btn.primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: #fff;
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+        .icon-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        /* ─── 部署状态指示器 ─── */
+        .deploy-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .deploy-indicator.configured {
+            background: rgba(22,163,74,0.10);
+            color: var(--success);
+        }
+        .deploy-indicator.not-configured {
+            background: var(--surface-2);
+            color: var(--text-faint);
+        }
+        .deploy-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .deploy-indicator.configured .deploy-dot { background: var(--success); }
+        .deploy-indicator.not-configured .deploy-dot { background: var(--text-faint); }
+
+        /* ─── 主内容 ─── */
+        .workspace {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        /* ─── 侧边栏 ─── */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ─── 侧边栏标签切换 ─── */
+        .sidebar-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-tab {
+            padding: 10px 0;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all .15s;
+            letter-spacing: 0.02em;
+        }
+        .sidebar-tab:hover { color: var(--text); background: none; box-shadow: none; transform: none; }
+        .sidebar-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .sidebar-panel { flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; }
+        .sidebar-panel.hidden { display: none; }
+
+        /* ─── 表单面板 ─── */
+        .form-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .form-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            margin-bottom: 12px;
+        }
+        .form-group { margin-bottom: 10px; }
+        .form-group label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .form-actions {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            background: var(--surface);
+        }
+        .form-actions button { flex: 1; }
+
+        /* ─── 分类管理面板 ─── */
+        .cat-panel-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+        }
+        .cat-add-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .cat-add-row input { flex: 1; }
+        .cat-add-row button { flex-shrink: 0; white-space: nowrap; }
+
+        .cat-list { display: flex; flex-direction: column; gap: 6px; }
+        .cat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            transition: all .15s;
+        }
+        .cat-item:hover { border-color: var(--border-strong); }
+        .cat-color-swatch {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: var(--shadow-sm);
+            transition: transform .15s;
+            position: relative;
+        }
+        .cat-color-swatch:hover { transform: scale(1.15); }
+        .cat-color-picker {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            cursor: pointer;
+        }
+        .cat-name-input {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            background: none;
+            border: none;
+            color: var(--text);
+            padding: 0;
+            font-family: inherit;
+        }
+        .cat-name-input:focus { outline: none; }
+        .cat-count {
+            font-size: 11px;
+            color: var(--text-faint);
+            font-family: 'DM Mono', monospace;
+            flex-shrink: 0;
+        }
+        .cat-delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-faint);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1;
+            transition: all .15s;
+        }
+        .cat-delete-btn:hover { color: var(--danger); background: var(--danger-soft); box-shadow: none; transform: none; }
+        .cat-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-faint);
+            font-size: 13px;
+        }
+        .cat-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .stat-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-faint);
+            font-weight: 500;
+            letter-spacing: 0.04em;
+        }
+
+        /* ─── 主面板 ─── */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        /* ─── 列表顶部工具栏 ─── */
+        .list-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+        .list-toolbar-left { display: flex; align-items: center; gap: 12px; }
+        .list-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+        .project-count-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ─── 分类过滤标签栏 ─── */
+        .cat-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .cat-filter-bar::-webkit-scrollbar { display: none; }
+        .cat-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-family: inherit;
+        }
+        .cat-filter-chip:hover { border-color: var(--border-strong); color: var(--text); background: none; box-shadow: none; transform: none; }
+        .cat-filter-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .cat-filter-chip .chip-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ─── 搜索框 ─── */
+        .search-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .search-wrap svg {
+            position: absolute;
+            left: 9px; top: 50%;
+            transform: translateY(-50%);
+            width: 14px; height: 14px;
+            color: var(--text-faint);
+            pointer-events: none;
+        }
+        #search-box {
+            padding-left: 30px;
+            width: 200px;
+        }
+
+        /* ─── 表格区 ─── */
+        .table-wrap {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+        thead th {
+            background: var(--surface);
+            color: var(--text-faint);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            white-space: nowrap;
+        }
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child { border-radius: 0 8px 0 0; }
+        thead th.sortable { cursor: pointer; user-select: none; }
+        thead th.sortable:hover { color: var(--primary); }
+        thead th.sort-asc::after { content: ' \2191'; color: var(--primary); }
+        thead th.sort-desc::after { content: ' \2193'; color: var(--primary); }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background .12s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--primary-soft); }
+        tbody td {
+            padding: 9px 12px;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        /* 列宽控制 */
+        .col-name { min-width: 130px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .col-cat { min-width: 90px; white-space: nowrap; }
+        .col-date { white-space: nowrap; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); }
+        .col-days { white-space: nowrap; text-align: center; font-family: 'DM Mono', monospace; font-size: 12px; }
+        .col-progress { min-width: 130px; }
+        .col-notes { max-width: 200px; color: var(--text-muted); font-size: 12px; }
+        .col-actions { white-space: nowrap; }
+
+        /* ─── 分类徽标 ─── */
+        .cat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .cat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ─── 进度 ─── */
+        .progress-cell { display:flex; align-items:center; gap:8px; }
+        .progress-bar-outer {
+            flex: 1;
+            height: 5px;
+            border-radius: 999px;
+            background: var(--border);
+            overflow: hidden;
+            min-width: 60px;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            transition: width .4s ease;
+        }
+        .progress-bar-inner.s-pending { background: var(--border-strong); }
+        .progress-bar-inner.s-done { background: linear-gradient(90deg, #15803d, #22c55e); }
+        .progress-bar-inner.s-overdue { background: linear-gradient(90deg, #b91c1c, #f87171); }
+        .progress-text {
+            font-size: 11.5px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text-muted);
+            min-width: 34px;
+            text-align: right;
+        }
+        .progress-text.s-done { color: var(--success); font-weight: 700; }
+        .progress-text.s-overdue { color: var(--danger); font-weight: 700; }
+
+        /* ─── 状态点 ─── */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 600;
+            padding: 2px 7px; border-radius: 999px;
+        }
+        .status-badge.active { background: rgba(37,99,235,0.10); color: var(--primary); }
+        .status-badge.done { background: rgba(22,163,74,0.10); color: var(--success); }
+        .status-badge.overdue { background: rgba(220,38,38,0.10); color: var(--danger); }
+        .status-badge.pending { background: var(--surface-2); color: var(--text-muted); }
+
+        /* ─── 操作按钮 ─── */
+        .action-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 13px;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .action-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); box-shadow: none; transform: none; }
+        .action-btn.danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+        .action-btn + .action-btn { margin-left: 4px; }
+
+        /* ─── 通用输入 ─── */
+        input[type="text"], input[type="date"], input[type="number"], input[type="password"], textarea, select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--surface-2);
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            transition: border-color .15s, box-shadow .15s;
+            appearance: none;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+            background: var(--surface);
+        }
+        textarea { resize: vertical; min-height: 54px; }
+        select { cursor: pointer; }
+        [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .form-hint {
+            color: var(--text-faint);
+            font-size: 11px;
+            display: block;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+        .form-hint a { color: var(--primary); text-decoration: none; }
+        .form-hint a:hover { text-decoration: underline; }
+
+        /* ─── 通用按钮 ─── */
+        button {
+            cursor: pointer;
+            padding: 7px 14px;
+            border: 1px solid var(--primary);
+            background: var(--primary);
+            color: #fff;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        button:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+            transform: none;
+        }
+        button.secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        button.secondary:hover { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); box-shadow: none; }
+        button.danger-outline {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid rgba(220,38,38,0.3);
+        }
+        button.danger-outline:hover { background: var(--danger-soft); box-shadow: none; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+        /* ─── 空状态 ─── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-faint);
+        }
+        .empty-state-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.5; }
+        .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .empty-state-text { font-size: 13px; line-height: 1.6; }
+
+        /* ─── Toast ─── */
+        .toast-container {
+            position: fixed; top: 16px; right: 16px;
+            z-index: 99999;
+            display: flex; flex-direction: column; gap: 6px;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px;
+            border-radius: 9px;
+            font-size: 13px; font-weight: 500;
+            color: #fff;
+            box-shadow: var(--shadow-lg);
+            pointer-events: auto;
+            max-width: 320px;
+            animation: toastIn .2s ease forwards;
+        }
+        .toast-success { background: #166534; }
+        .toast-error { background: #991b1b; }
+        .toast-info { background: var(--primary-dark); }
+        .toast-deploy { background: #1e3a5f; }
+        .toast.out { animation: toastOut .2s ease forwards; }
+        @keyframes toastIn { from { opacity:0; transform:translateY(-8px) scale(.96); } to { opacity:1; transform:none; } }
+        @keyframes toastOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(-8px) scale(.96); } }
+
+        /* ─── 页脚 ─── */
+        footer {
+            flex-shrink: 0;
+            padding: 6px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-faint);
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            gap: 12px;
+        }
+        footer span { font-family: 'DM Mono', monospace; }
+        .footer-right { display: flex; align-items: center; gap: 12px; }
+
+        /* ─── 悬浮按钮 ─── */
+        #open-timeline-btn {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            z-index: 50;
+            display: flex; align-items: center; gap: 7px;
+            padding: 10px 18px;
+            font-size: 13.5px;
+            border-radius: 999px;
+            box-shadow: var(--shadow-lg), 0 0 0 3px var(--primary-soft);
+            animation: fabPulse 3s ease-in-out infinite;
+        }
+        @keyframes fabPulse {
+            0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 3px var(--primary-soft); }
+            50% { box-shadow: var(--shadow-lg), 0 0 0 6px var(--primary-soft); }
+        }
+        #open-timeline-btn svg { width: 15px; height: 15px; }
+
+        /* ─── Modal 通用 ─── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.7);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity .2s;
+        }
+        .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        /* ─── 时间轴 Modal ─── */
+        .timeline-content {
+            width: 95%; height: 93%;
+            background: var(--surface);
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* ─── 时间轴控制 ─── */
+        #timeline-controls {
+            display: flex;
+            justify-content: space-between; align-items: center;
+            padding: 12px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            gap: 16px;
+        }
+        #timeline-controls .nav-group,
+        #timeline-controls .view-group { display:flex; gap:6px; align-items:center; }
+        #current-view-label {
+            font-size: 16px; font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+        }
+        #close-timeline-btn, .close-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 18px;
+            width: 32px; height: 32px;
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            padding: 0;
+        }
+        #close-timeline-btn:hover, .close-btn:hover { color: var(--text); background: var(--surface-2); box-shadow: none; transform: none; }
+        .view-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        /* ─── 设置 Modal ─── */
+        .settings-content {
+            width: 500px;
+            max-width: 95%;
+            max-height: 85vh;
+            background: var(--surface);
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .settings-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        .settings-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .settings-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .settings-actions button { flex: 1; }
+        .settings-info-box {
+            background: var(--primary-soft);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+        .settings-info-box strong { color: var(--primary); }
+
+        /* ─── 图例 ─── */
+        #timeline-legend {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            padding: 8px 20px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        #timeline-legend:empty { display: none; }
+        .legend-item {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 11.5px; font-weight: 600;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 3px 9px;
+        }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ─── 时间轴主体 ─── */
+        #timeline-kanban { overflow: auto; padding: 16px 20px; flex-grow: 1; }
+        .timeline-grid { min-width: 1200px; }
+        .timeline-header {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            position: sticky; top: 0;
+            background: var(--surface);
+            z-index: 10;
+            border-bottom: 2px solid var(--border);
+        }
+        .timeline-header .header-name {
+            padding: 8px 12px;
+            font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            border-right: 1px solid var(--border);
+            color: var(--text-faint);
+        }
+        .timeline-header-dates { display: grid; }
+        .timeline-header-cell {
+            padding: 8px 4px;
+            font-size: 11px; font-weight: 600;
+            text-align: center;
+            border-right: 1px dotted var(--border);
+            color: var(--text-faint);
+        }
+        .timeline-header-cell.today {
+            background: var(--today-bg);
+            color: var(--primary);
+            border-left: 1px solid var(--today-border);
+            border-right: 1px solid var(--today-border);
+        }
+        .project-row {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            border-bottom: 1px solid var(--border);
+        }
+        .project-row:nth-child(even) { background: var(--bg); }
+        .project-row .project-name {
+            padding: 10px 12px;
+            font-size: 12px; font-weight: 500;
+            border-right: 1px solid var(--border);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .project-row .project-bar-wrapper { position: relative; height: 44px; }
+        .project-bar {
+            position: absolute;
+            top: 8px; height: 28px;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 11px; font-weight: 700;
+            padding: 0 10px;
+            line-height: 28px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer;
+            transition: all .15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .project-bar:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* ─── 滚动条美化 ─── */
+        .table-wrap, #timeline-kanban, .form-scroll, .cat-panel-body, .cat-filter-bar, .settings-body {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-strong) transparent;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+
+        /* ─── 响应式 ─── */
+        @media (max-width: 1100px) {
+            .workspace { grid-template-columns: 280px 1fr; }
+        }
+        @media (max-width: 900px) {
+            .workspace { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .sidebar { max-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
+            #search-box { width: 140px; }
+        }
+        @media (max-width: 640px) {
+            header h1 { display: none; }
+            .header-divider { display: none; }
+            #open-timeline-btn .btn-label { display: none; }
+            .icon-btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ─── 密码门 ─── -->
+<div id="password-gate" class="password-gate">
+    <div class="password-card">
+        <div class="password-icon">&#128274;</div>
+        <h2>Time Cycle Dashboard</h2>
+        <p>请输入访问密码以查看看板</p>
+        <div class="password-input-wrap">
+            <input type="password" id="password-input" placeholder="输入密码..." autocomplete="off" autofocus>
+            <button id="password-submit">进入</button>
+        </div>
+        <div class="password-error" id="password-error"></div>
+        <div id="password-loading-hint" style="font-size:12px;color:var(--text-faint);margin-top:8px;">正在加载数据...</div>
+    </div>
+</div>
+
+<div class="app">
+
+    <!-- ─── 头部 ─── -->
+    <header>
+        <div class="header-brand">
+            <div class="brand-icon">A</div>
+            <h1>Time Cycle Dashboard</h1>
+        </div>
+        <div class="header-controls">
+            <span id="deploy-indicator" class="deploy-indicator not-configured">
+                <span class="deploy-dot"></span>
+                <span id="deploy-indicator-text">未配置部署</span>
+            </span>
+            <div class="header-divider"></div>
+            <button id="deploy-settings-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>部署设置</span>
+            </button>
+            <div class="header-divider"></div>
+            <button id="theme-toggle-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                </svg>
+                <span>主题</span>
+            </button>
+            <div class="header-divider"></div>
+            <button id="export-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>导出</span>
+            </button>
+            <button id="import-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>导入</span>
+            </button>
+            <input type="file" id="import-file" accept=".json">
+            <div class="header-divider"></div>
+            <button id="logout-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><polyline points="17 8 21 12 17 16"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>锁定</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ─── 工作区 ─── -->
+    <div class="workspace">
+
+        <!-- ─── 侧边栏 ─── -->
+        <aside class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="form">添加项目</button>
+                <button class="sidebar-tab" data-tab="categories">分类管理</button>
+            </div>
+
+            <!-- 表单面板 -->
+            <div class="sidebar-panel" id="panel-form">
+                <div class="form-scroll">
+                    <form id="project-form">
+                        <input type="hidden" id="project-id">
+                        <div class="form-section-label" id="form-title">基本信息</div>
+
+                        <div class="form-group">
+                            <label for="project-name">项目名称 <span style="color:var(--danger)">*</span></label>
+                            <input type="text" id="project-name" required placeholder="输入项目名称...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="project-category">分类标签</label>
+                            <select id="project-category">
+                                <option value="">— 无分类 —</option>
+                            </select>
+                        </div>
+
+                        <div class="form-section-label" style="margin-top:16px;">时间配置</div>
+
+                        <div class="form-group">
+                            <label for="start-date">开始时间</label>
+                            <input type="date" id="start-date" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cycle-days">周期（天）</label>
+                                <input type="number" id="cycle-days" min="1" value="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="end-date">结束时间</label>
+                                <input type="date" id="end-date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">备注</label>
+                            <textarea id="notes" rows="2" placeholder="项目备注（可选）"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" form="project-form" id="save-btn">保存项目</button>
+                    <button type="button" id="cancel-btn" class="secondary" style="display:none">取消</button>
+                </div>
+            </div>
+
+            <!-- 分类管理面板 -->
+            <div class="sidebar-panel hidden" id="panel-categories">
+                <div class="cat-panel-body">
+                    <div class="cat-stats" id="cat-stats"></div>
+
+                    <div class="cat-add-row">
+                        <input type="text" id="new-cat-name" placeholder="新建分类名称...">
+                        <button type="button" id="add-cat-btn">＋ 新建</button>
+                    </div>
+
+                    <div class="cat-list" id="cat-list"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ─── 主面板 ─── -->
+        <main class="main-panel">
+
+            <!-- 工具栏 -->
+            <div class="list-toolbar">
+                <div class="list-toolbar-left">
+                    <span class="list-title">项目列表</span>
+                    <span class="project-count-badge" id="project-count-span">0</span>
+                </div>
+                <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="search-box" placeholder="搜索项目...">
+                </div>
+            </div>
+
+            <!-- 分类过滤标签栏 -->
+            <div class="cat-filter-bar" id="cat-filter-bar">
+                <button class="cat-filter-chip active" data-cat="">全部</button>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-wrap">
+                <table id="project-list-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable col-name" data-sort="name">项目名称</th>
+                            <th class="sortable col-cat" data-sort="category">分类</th>
+                            <th class="sortable col-date" data-sort="start">开始时间</th>
+                            <th class="sortable col-days" data-sort="days">天数</th>
+                            <th class="sortable col-date" data-sort="end">结束时间</th>
+                            <th class="sortable col-progress" data-sort="progress">进度</th>
+                            <th class="col-notes">备注</th>
+                            <th class="col-actions">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-list-body"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <span id="page-footer">@time.haloninja.com</span>
+        <div class="footer-right">
+            <span id="deploy-status-text"></span>
+            <span id="footer-time"></span>
+        </div>
+    </footer>
+
+</div>
+
+<!-- 看板按钮 -->
+<button id="open-timeline-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span class="btn-label">时间看板</span>
+</button>
+
+<!-- 时间轴 Modal -->
+<div id="timeline-modal" class="modal-overlay hidden">
+    <div class="timeline-content">
+        <section id="timeline-controls">
+            <div class="nav-group">
+                <button id="prev-btn" class="secondary">&#9664;</button>
+                <button id="today-btn" class="secondary">今天</button>
+                <button id="next-btn" class="secondary">&#9654;</button>
+            </div>
+            <h3 id="current-view-label">2025年 11月</h3>
+            <div class="view-group">
+                <button class="view-btn secondary" data-view="year">年</button>
+                <button class="view-btn" data-view="month">月</button>
+                <button class="view-btn secondary" data-view="week">周</button>
+                <button class="view-btn secondary" data-view="day">日</button>
+                <button id="close-timeline-btn" title="关闭 (ESC)">&times;</button>
+            </div>
+        </section>
+        <div id="timeline-legend"></div>
+        <section id="timeline-kanban">
+            <div class="timeline-grid">
+                <div class="timeline-header">
+                    <div class="header-name">项目</div>
+                    <div class="timeline-header-dates" id="timeline-header-dates"></div>
+                </div>
+                <div class="timeline-body" id="timeline-body"></div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- 部署设置 Modal -->
+<div id="settings-modal" class="modal-overlay hidden">
+    <div class="settings-content">
+        <div class="settings-header">
+            <h3>部署设置</h3>
+            <button id="close-settings-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-info-box">
+                <strong>自动部署流程：</strong>保存数据 &rarr; 通过 GitHub API 提交 data.json &rarr; CloudFlare Pages 自动构建部署 &rarr; 1-2 分钟后站点更新。<br>
+                需要一个具有 <strong>repo</strong> 权限的 GitHub Personal Access Token。
+            </div>
+
+            <div class="form-section-label">GitHub 仓库配置</div>
+
+            <div class="form-group">
+                <label for="gh-owner">GitHub 用户名</label>
+                <input type="text" id="gh-owner" placeholder="如：tianzeqi">
+            </div>
+
+            <div class="form-group">
+                <label for="gh-repo">仓库名称</label>
+                <input type="text" id="gh-repo" placeholder="如：Time-Cycle-Dashboard">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="gh-branch">分支名称</label>
+                    <input type="text" id="gh-branch" value="main" placeholder="main">
+                </div>
+                <div class="form-group">
+                    <label for="gh-path">数据文件路径</label>
+                    <input type="text" id="gh-path" value="data.json" placeholder="data.json">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="gh-token">访问令牌 (Personal Access Token)</label>
+                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx...">
+                <small class="form-hint">
+                    需要 repo 权限。
+                    <a href="https://github.com/settings/tokens/new?scopes=repo&description=Time-Cycle-Dashboard" target="_blank" rel="noopener">点此创建令牌 &rarr;</a>
+                    令牌仅保存在本地浏览器，不会上传到任何服务器。
+                </small>
+            </div>
+
+            <div class="settings-actions">
+                <button id="test-gh-btn" class="secondary">测试连接</button>
+                <button id="save-settings-btn">保存设置</button>
+                <button id="clear-settings-btn" class="danger-outline">清除配置</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════ //
+// ─── 密码门 ─── //
+// ═══════════════════════════════════════════════════ //
+
+// ─── 加密 / 解密工具（Web Crypto API: AES-256-GCM + PBKDF2）─── //
+let decryptedDataCache = null; // 解密后的数据缓存
+
+function base64ToUint8Array(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+}
+
+function uint8ArrayToBase64(bytes) {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+
+async function deriveKey(password, salt) {
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+async function decryptData(password, encryptedObj) {
+    const salt = base64ToUint8Array(encryptedObj.salt);
+    const iv = base64ToUint8Array(encryptedObj.iv);
+    const data = base64ToUint8Array(encryptedObj.data);
+    const key = await deriveKey(password, salt);
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+async function encryptData(password, dataObj) {
+    const salt = crypto.getRandomValues(new Uint8Array(32));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const data = new TextEncoder().encode(JSON.stringify(dataObj));
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+    return {
+        salt: uint8ArrayToBase64(salt),
+        iv: uint8ArrayToBase64(iv),
+        data: uint8ArrayToBase64(new Uint8Array(encrypted))
+    };
+}
+
+// ─── 密码门 ─── //
+function setupPasswordGate() {
+    const gate = document.getElementById('password-gate');
+    const input = document.getElementById('password-input');
+    const submit = document.getElementById('password-submit');
+    const error = document.getElementById('password-error');
+    const loadingHint = document.getElementById('password-loading-hint');
+
+    // 预加载加密数据
+    let encryptedData = null;
+    fetch('data.json', { cache: 'no-cache' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { encryptedData = d; if (loadingHint) loadingHint.style.display = 'none'; })
+        .catch(() => { if (loadingHint) loadingHint.style.display = 'none'; });
+
+    async function tryPassword() {
+        const pwd = input.value;
+        if (!pwd) { input.focus(); return; }
+
+        // 等待加密数据加载
+        if (!encryptedData) {
+            error.textContent = '数据加载中，请稍候...';
+            return;
+        }
+
+        try {
+            // 用密码解密数据 — 解密成功即密码正确
+            const data = await decryptData(pwd, encryptedData);
+            sessionStorage.setItem('tz_authed', 'true');
+            sessionStorage.setItem('tz_pwd', pwd);
+            decryptedDataCache = data;
+            gate.classList.add('hidden');
+            setTimeout(() => { gate.style.display = 'none'; }, 300);
+            initApp();
+        } catch(e) {
+            // 解密失败 = 密码错误
+            error.textContent = '密码错误，请重试';
+            input.value = '';
+            input.focus();
+            input.style.borderColor = 'var(--danger)';
+            setTimeout(() => { input.style.borderColor = ''; }, 1000);
+        }
+    }
+
+    submit.addEventListener('click', tryPassword);
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); tryPassword(); }
+    });
+    input.focus();
+}
+
+function logout() {
+    sessionStorage.removeItem('tz_authed');
+    sessionStorage.removeItem('tz_pwd');
+    decryptedDataCache = null;
+    location.reload();
+}
+
+// ═══════════════════════════════════════════════════ //
+// ─── 主应用 ─── //
+// ═══════════════════════════════════════════════════ //
+
+async function initApp() {
+
+    // ─── DOM 引用 ─── //
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const projectCountSpan = document.getElementById('project-count-span');
+    const projectForm = document.getElementById('project-form');
+    const formTitle = document.getElementById('form-title');
+    const projectIdInput = document.getElementById('project-id');
+    const projectNameInput = document.getElementById('project-name');
+    const projectCategoryInput = document.getElementById('project-category');
+    const startDateInput = document.getElementById('start-date');
+    const cycleDaysInput = document.getElementById('cycle-days');
+    const endDateInput = document.getElementById('end-date');
+    const notesInput = document.getElementById('notes');
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const projectListBody = document.getElementById('project-list-body');
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importFile = document.getElementById('import-file');
+    const pageFooter = document.getElementById('page-footer');
+    const footerTime = document.getElementById('footer-time');
+    const searchBox = document.getElementById('search-box');
+    const catFilterBar = document.getElementById('cat-filter-bar');
+    const openTimelineBtn = document.getElementById('open-timeline-btn');
+    const closeTimelineBtn = document.getElementById('close-timeline-btn');
+    const timelineModal = document.getElementById('timeline-modal');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const todayBtn = document.getElementById('today-btn');
+    const viewBtns = document.querySelectorAll('.view-btn');
+    const currentViewLabel = document.getElementById('current-view-label');
+    const timelineHeaderDates = document.getElementById('timeline-header-dates');
+    const timelineBody = document.getElementById('timeline-body');
+    const timelineLegend = document.getElementById('timeline-legend');
+    const toastContainer = document.getElementById('toast-container');
+    const sortHeaders = document.querySelectorAll('th.sortable');
+    const sidebarTabs = document.querySelectorAll('.sidebar-tab');
+    const addCatBtn = document.getElementById('add-cat-btn');
+    const newCatName = document.getElementById('new-cat-name');
+    const catList = document.getElementById('cat-list');
+    const catStats = document.getElementById('cat-stats');
+    const logoutBtn = document.getElementById('logout-btn');
+    const deploySettingsBtn = document.getElementById('deploy-settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings-btn');
+    const testGhBtn = document.getElementById('test-gh-btn');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const clearSettingsBtn = document.getElementById('clear-settings-btn');
+    const deployIndicator = document.getElementById('deploy-indicator');
+    const deployIndicatorText = document.getElementById('deploy-indicator-text');
+    const deployStatusText = document.getElementById('deploy-status-text');
+
+    // ─── 状态 ─── //
+    let state = {
+        projects: [],
+        categories: [],
+        currentDate: new Date(),
+        currentView: 'month',
+        sortBy: 'start',
+        sortDir: 'asc',
+        filterCat: '',
+    };
+
+    // ─── 颜色池 ─── //
+    const COLOR_POOL = [
+        '#4f86f7','#50c878','#f7a14f','#e05a5a',
+        '#a855f7','#14b8a6','#f59e0b','#ec4899',
+        '#6366f1','#84cc16','#06b6d4','#fb923c',
+        '#8b5cf6','#10b981','#f43f5e','#3b82f6',
+    ];
+
+    function getNextColor() {
+        const used = state.categories.map(c => c.color);
+        return COLOR_POOL.find(c => !used.includes(c)) || COLOR_POOL[state.categories.length % COLOR_POOL.length];
+    }
+
+    function getCategoryById(id) {
+        return state.categories.find(c => c.id === id) || null;
+    }
+
+    function getCategoryColor(catId) {
+        const cat = getCategoryById(catId);
+        return cat ? cat.color : null;
+    }
+
+    function getCategoryName(catId) {
+        const cat = getCategoryById(catId);
+        return cat ? cat.name : '';
+    }
+
+    // ─── 日期辅助 ─── //
+    const MS_PER_DAY = 86400000;
+    function parseDate(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+    function formatDate(d) { return d.toISOString().split('T')[0]; }
+    function addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+    function addMonths(d,n) { const r=new Date(d); r.setDate(1); r.setMonth(r.getMonth()+n); return r; }
+    function addYears(d,n) { const r=new Date(d); r.setFullYear(r.getFullYear()+n); return r; }
+    function getDaysDiff(d1,d2) {
+        const a=new Date(d1.getFullYear(),d1.getMonth(),d1.getDate());
+        const b=new Date(d2.getFullYear(),d2.getMonth(),d2.getDate());
+        return Math.round((a-b)/MS_PER_DAY);
+    }
+    function getDaysInMonth(d) { return new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
+    function getStartOfWeek(d) {
+        const r=new Date(d); const day=r.getDay();
+        r.setDate(r.getDate()-day+(day===0?-6:1)); return r;
+    }
+    function getStartOfMonth(d) { return new Date(d.getFullYear(),d.getMonth(),1); }
+    function getStartOfYear(d) { return new Date(d.getFullYear(),0,1); }
+
+    // ─── 进度 & 状态 ─── //
+    function getProgressPercent(p) {
+        try {
+            const today=new Date(), start=parseDate(p.start), end=parseDate(p.end);
+            if (isNaN(start)||isNaN(end)) return 0;
+            const total=getDaysDiff(end,start)+1;
+            if (total<=0) return 0;
+            if (today<start) return 0;
+            if (today>end) return 100;
+            return Math.max(0,Math.min(100,Math.round((getDaysDiff(today,start)+1)/total*100)));
+        } catch(e) { return 0; }
+    }
+    function getProjectStatus(p) {
+        const today=new Date(), start=parseDate(p.start), end=parseDate(p.end);
+        const prog=getProgressPercent(p);
+        if (prog===100) return 'done';
+        if (today>end) return 'overdue';
+        if (today<start) return 'pending';
+        return 'active';
+    }
+
+    // ═══════════════════════════════════════════════════ //
+    // ─── GitHub 部署集成 ─── //
+    // ═══════════════════════════════════════════════════ //
+
+    function getGitHubConfig() {
+        const raw = localStorage.getItem('tz_github_config');
+        if (!raw) return null;
+        try {
+            const config = JSON.parse(raw);
+            if (!config.owner || !config.repo || !config.token) return null;
+            return config;
+        } catch { return null; }
+    }
+
+    function saveGitHubConfig(config) {
+        localStorage.setItem('tz_github_config', JSON.stringify(config));
+        updateDeployIndicator();
+    }
+
+    function updateDeployIndicator() {
+        const config = getGitHubConfig();
+        if (config) {
+            deployIndicator.className = 'deploy-indicator configured';
+            deployIndicatorText.textContent = `GitHub: ${config.owner}/${config.repo}`;
+            deployStatusText.textContent = `\uD83D\uDD17 ${config.owner}/${config.repo}`;
+        } else {
+            deployIndicator.className = 'deploy-indicator not-configured';
+            deployIndicatorText.textContent = '未配置部署';
+            deployStatusText.textContent = '';
+        }
+    }
+
+    let deployTimer = null;
+    let isDeploying = false;
+
+    async function deployToGitHub() {
+        const config = getGitHubConfig();
+        if (!config) return; // 静默返回，不配置时只在本地保存
+
+        if (isDeploying) return;
+        isDeploying = true;
+
+        const { owner, repo, branch, path, token } = config;
+        const pwd = sessionStorage.getItem('tz_pwd');
+
+        // 加密数据后再推送 — 确保仓库中不暴露明文
+        let contentToSend;
+        if (pwd) {
+            try {
+                const encrypted = await encryptData(pwd, { projects: state.projects, categories: state.categories });
+                contentToSend = JSON.stringify(encrypted, null, 2);
+            } catch(e) {
+                showToast('加密失败，取消部署', 'error');
+                isDeploying = false;
+                return;
+            }
+        } else {
+            showToast('未检测到密码会话，请重新登录', 'error');
+            isDeploying = false;
+            return;
+        }
+
+        const base64Content = btoa(unescape(encodeURIComponent(contentToSend)));
+
+        showToast('正在部署到 GitHub...', 'deploy');
+
+        try {
+            // 获取当前文件的 SHA（如果存在）
+            let sha = null;
+            try {
+                const getResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (getResp.ok) {
+                    const fileData = await getResp.json();
+                    sha = fileData.sha;
+                }
+            } catch(e) { /* 文件可能不存在 */ }
+
+            // 提交更新
+            const putBody = {
+                message: `Auto-deploy: Update ${path} (${new Date().toLocaleString('zh-CN')})`,
+                content: base64Content,
+                branch: branch,
+                committer: { name: 'Time Dashboard', email: 'dashboard@users.noreply.github.com' }
+            };
+            if (sha) putBody.sha = sha;
+
+            const putResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(putBody)
+            });
+
+            if (putResp.ok) {
+                showToast('部署成功！CloudFlare 将在 1-2 分钟内更新', 'success');
+            } else {
+                const err = await putResp.json().catch(() => ({}));
+                showToast(`部署失败：${err.message || putResp.statusText}`, 'error');
+            }
+        } catch(err) {
+            showToast(`部署失败：${err.message}`, 'error');
+        } finally {
+            isDeploying = false;
+        }
+    }
+
+    // ─── 持久化（本地 + GitHub） ─── //
+    function saveState() {
+        localStorage.setItem('tz_projects', JSON.stringify(state.projects));
+        localStorage.setItem('tz_categories', JSON.stringify(state.categories));
+        // 防抖部署到 GitHub
+        if (deployTimer) clearTimeout(deployTimer);
+        deployTimer = setTimeout(() => deployToGitHub(), 800);
+    }
+
+    async function loadData() {
+        // 1. 使用密码门解密后的数据
+        if (decryptedDataCache && decryptedDataCache.projects) {
+            state.projects = decryptedDataCache.projects;
+            state.categories = decryptedDataCache.categories || [];
+            localStorage.setItem('tz_projects', JSON.stringify(state.projects));
+            localStorage.setItem('tz_categories', JSON.stringify(state.categories));
+            migrateCategoryData();
+            return;
+        }
+
+        // 2. 回退到 localStorage（离线 / 缓存场景）
+        const p = localStorage.getItem('tz_projects');
+        if (p) {
+            try { state.projects = JSON.parse(p); } catch { state.projects = []; }
+        }
+        const c = localStorage.getItem('tz_categories');
+        if (c) {
+            try { state.categories = JSON.parse(c); } catch { state.categories = []; }
+        }
+        migrateCategoryData();
+
+        // 兼容旧 categoryColors
+        const oldCC = localStorage.getItem('timelineCategoryColors');
+        if (oldCC && state.categories.length === 0) {
+            const cc = JSON.parse(oldCC);
+            Object.entries(cc).forEach(([name, color]) => {
+                if (!state.categories.find(c => c.name === name)) {
+                    state.categories.push({ id: 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2), name, color });
+                }
+            });
+        }
+    }
+
+    function migrateCategoryData() {
+        state.projects.forEach(proj => {
+            if (typeof proj.category === 'string' && proj.category && !state.categories.find(c => c.id === proj.category)) {
+                let existing = state.categories.find(c => c.name === proj.category);
+                if (!existing) {
+                    existing = { id: 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2), name: proj.category, color: getNextColor() };
+                    state.categories.push(existing);
+                }
+                proj.category = existing.id;
+            }
+            if (proj.category === undefined || proj.category === null) proj.category = '';
+        });
+    }
+
+    // ─── Toast ─── //
+    function showToast(msg, type='info') {
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        const icon = type==='success' ? '\u2713' : type==='error' ? '\u2717' : type==='deploy' ? '\u2191' : '\u2139';
+        t.innerHTML = `<span style="font-weight:800;">${icon}</span> ${msg}`;
+        toastContainer.appendChild(t);
+        setTimeout(()=>{
+            t.classList.add('out');
+            t.addEventListener('animationend',()=>t.remove());
+        }, 3200);
+    }
+
+    // ─── 排序 ─── //
+    function getSortedProjects(list) {
+        return [...list].sort((a,b)=>{
+            let va, vb;
+            switch(state.sortBy) {
+                case 'name': va=a.name.toLowerCase(); vb=b.name.toLowerCase(); break;
+                case 'category': va=getCategoryName(a.category).toLowerCase(); vb=getCategoryName(b.category).toLowerCase(); break;
+                case 'start': va=a.start; vb=b.start; break;
+                case 'end': va=a.end; vb=b.end; break;
+                case 'days': va=a.days; vb=b.days; break;
+                case 'progress': va=getProgressPercent(a); vb=getProgressPercent(b); break;
+                default: va=a.start; vb=b.start;
+            }
+            if(va<vb) return state.sortDir==='asc'?-1:1;
+            if(va>vb) return state.sortDir==='asc'?1:-1;
+            return 0;
+        });
+    }
+    function updateSortHeaders() {
+        sortHeaders.forEach(th=>{
+            th.classList.remove('sort-asc','sort-desc');
+            if(th.dataset.sort===state.sortBy) th.classList.add(state.sortDir==='asc'?'sort-asc':'sort-desc');
+        });
+    }
+
+    // ─── 更新表单中的分类下拉 ─── //
+    function updateCategorySelect() {
+        const cur = projectCategoryInput.value;
+        projectCategoryInput.innerHTML = '<option value="">\u2014 无分类 \u2014</option>';
+        state.categories.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = cat.name;
+            if (cat.id === cur) opt.selected = true;
+            projectCategoryInput.appendChild(opt);
+        });
+    }
+
+    // ─── 渲染分类过滤标签 ─── //
+    function renderCatFilterBar() {
+        catFilterBar.innerHTML = '';
+        const allChip = document.createElement('button');
+        allChip.className = 'cat-filter-chip' + (state.filterCat === '' ? ' active' : '');
+        allChip.dataset.cat = '';
+        allChip.textContent = '全部';
+        allChip.addEventListener('click', () => { state.filterCat = ''; renderMainView(); });
+        catFilterBar.appendChild(allChip);
+
+        state.categories.forEach(cat => {
+            const count = state.projects.filter(p => p.category === cat.id).length;
+            if (count === 0) return;
+            const chip = document.createElement('button');
+            chip.className = 'cat-filter-chip' + (state.filterCat === cat.id ? ' active' : '');
+            chip.dataset.cat = cat.id;
+            chip.innerHTML = `<span class="chip-dot" style="background:${cat.color};"></span>${cat.name} <span style="opacity:.6;font-size:10px;">${count}</span>`;
+            chip.addEventListener('click', () => { state.filterCat = cat.id; renderMainView(); });
+            catFilterBar.appendChild(chip);
+        });
+    }
+
+    // ─── 渲染分类管理面板 ─── //
+    function renderCategoryPanel() {
+        const total = state.projects.length;
+        const catCount = state.categories.length;
+        const uncategorized = state.projects.filter(p => !p.category).length;
+        catStats.innerHTML = `
+            <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">项目总数</div></div>
+            <div class="stat-card"><div class="stat-value">${catCount}</div><div class="stat-label">分类数量</div></div>
+            <div class="stat-card"><div class="stat-value">${uncategorized}</div><div class="stat-label">未分类</div></div>
+        `;
+
+        if (state.categories.length === 0) {
+            catList.innerHTML = '<div class="cat-empty">暂无分类，在上方输入名称后点击「新建」</div>';
+            return;
+        }
+        catList.innerHTML = '';
+        state.categories.forEach(cat => {
+            const count = state.projects.filter(p => p.category === cat.id).length;
+            const item = document.createElement('div');
+            item.className = 'cat-item';
+            item.dataset.id = cat.id;
+            item.innerHTML = `
+                <div class="cat-color-swatch" style="background:${cat.color};" title="点击更改颜色">
+                    <input type="color" class="cat-color-picker" value="${cat.color}" data-id="${cat.id}">
+                </div>
+                <input class="cat-name-input" type="text" value="${cat.name}" data-id="${cat.id}" placeholder="分类名称">
+                <span class="cat-count">${count}项</span>
+                <button class="cat-delete-btn" data-id="${cat.id}" title="删除分类">\u2715</button>
+            `;
+            catList.appendChild(item);
+
+            const colorPicker = item.querySelector('.cat-color-picker');
+            const swatch = item.querySelector('.cat-color-swatch');
+            colorPicker.addEventListener('input', (e) => {
+                const newColor = e.target.value;
+                swatch.style.background = newColor;
+                const cat = state.categories.find(c => c.id === e.target.dataset.id);
+                if (cat) { cat.color = newColor; saveState(); renderMainView(); }
+            });
+
+            const nameInput = item.querySelector('.cat-name-input');
+            nameInput.addEventListener('change', (e) => {
+                const newName = e.target.value.trim();
+                if (!newName) { e.target.value = cat.name; return; }
+                const duplicate = state.categories.find(c => c.name === newName && c.id !== cat.id);
+                if (duplicate) { showToast('分类名称已存在', 'error'); e.target.value = cat.name; return; }
+                const c = state.categories.find(c => c.id === e.target.dataset.id);
+                if (c) { c.name = newName; saveState(); renderMainView(); updateCategorySelect(); }
+            });
+        });
+
+        catList.addEventListener('click', (e) => {
+            const id = e.target.dataset.id;
+            if (!id || !e.target.classList.contains('cat-delete-btn')) return;
+            const cat = state.categories.find(c => c.id === id);
+            if (!cat) return;
+            const count = state.projects.filter(p => p.category === id).length;
+            const msg = count > 0
+                ? `确定要删除分类「${cat.name}」吗？\n该分类下有 ${count} 个项目，删除后这些项目将变为未分类。`
+                : `确定要删除分类「${cat.name}」吗？`;
+            if (!confirm(msg)) return;
+            state.categories = state.categories.filter(c => c.id !== id);
+            state.projects.forEach(p => { if (p.category === id) p.category = ''; });
+            if (state.filterCat === id) state.filterCat = '';
+            saveState();
+            renderMainView();
+            renderCategoryPanel();
+            updateCategorySelect();
+            showToast(`分类「${cat.name}」已删除`, 'info');
+        });
+    }
+
+    // ─── 渲染主视图 ─── //
+    function renderMainView() {
+        updateSortHeaders();
+        renderCatFilterBar();
+        updateCategorySelect();
+
+        const filterText = searchBox.value.toLowerCase().trim();
+
+        let filtered = state.projects.filter(p => {
+            const matchCat = !state.filterCat || p.category === state.filterCat;
+            const catName = getCategoryName(p.category).toLowerCase();
+            const matchText = !filterText || (
+                p.name.toLowerCase().includes(filterText) ||
+                catName.includes(filterText) ||
+                (p.notes || '').toLowerCase().includes(filterText) ||
+                p.start.includes(filterText) ||
+                p.end.includes(filterText)
+            );
+            return matchCat && matchText;
+        });
+
+        const total = state.projects.length;
+        const showing = filtered.length;
+        if (filterText || state.filterCat) {
+            projectCountSpan.textContent = `${showing} / ${total}`;
+        } else {
+            projectCountSpan.textContent = `${total}`;
+        }
+
+        filtered = getSortedProjects(filtered);
+        projectListBody.innerHTML = '';
+
+        if (filtered.length === 0) {
+            const emptyTitle = state.projects.length === 0 ? '还没有项目' : '没有符合条件的项目';
+            const emptyText = state.projects.length === 0
+                ? '在左侧填写信息后点击「保存项目」即可开始'
+                : '请尝试修改搜索条件或分类筛选';
+            projectListBody.innerHTML = `
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">\uD83D\uDCCB</div>
+                        <div class="empty-state-title">${emptyTitle}</div>
+                        <div class="empty-state-text">${emptyText}</div>
+                    </div>
+                </td></tr>`;
+            return;
+        }
+
+        filtered.forEach(p => {
+            const progress = getProgressPercent(p);
+            const status = getProjectStatus(p);
+            const catColor = getCategoryColor(p.category);
+            const catName = getCategoryName(p.category);
+
+            const catBadge = p.category && catColor
+                ? `<span class="cat-badge" style="background:${catColor}20;color:${catColor};border:1px solid ${catColor}40;">
+                       <span class="cat-dot" style="background:${catColor};"></span>${catName}
+                   </span>`
+                : `<span style="color:var(--text-faint);font-size:11px;">\u2014</span>`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="col-name" title="${p.name}"><strong style="font-weight:500;">${p.name}</strong></td>
+                <td class="col-cat">${catBadge}</td>
+                <td class="col-date">${p.start}</td>
+                <td class="col-days">${p.days}d</td>
+                <td class="col-date">${p.end}</td>
+                <td class="col-progress">
+                    <div class="progress-cell">
+                        <div class="progress-bar-outer">
+                            <div class="progress-bar-inner ${status==='pending'?'s-pending':status==='done'?'s-done':status==='overdue'?'s-overdue':''}" style="width:${progress}%;"></div>
+                        </div>
+                        <span class="progress-text ${status==='done'?'s-done':status==='overdue'?'s-overdue':''}">${progress}%</span>
+                    </div>
+                </td>
+                <td class="col-notes" title="${p.notes||''}">${p.notes ? p.notes.slice(0,40)+(p.notes.length>40?'\u2026':'') : ''}</td>
+                <td class="col-actions">
+                    <button class="action-btn edit-btn" data-id="${p.id}" title="编辑">\u270E</button>
+                    <button class="action-btn danger delete-btn" data-id="${p.id}" title="删除">\u2715</button>
+                </td>
+            `;
+            projectListBody.appendChild(tr);
+        });
+    }
+
+    // ─── 时间轴 ─── //
+    function renderModalView() {
+        timelineHeaderDates.innerHTML = '';
+        timelineBody.innerHTML = '';
+        viewBtns.forEach(btn => {
+            if (btn.dataset.view) btn.classList.toggle('secondary', btn.dataset.view !== state.currentView);
+        });
+        renderLegend();
+        switch(state.currentView) {
+            case 'day': renderDayView(); break;
+            case 'week': renderWeekView(); break;
+            case 'month': renderMonthView(); break;
+            case 'year': renderYearView(); break;
+        }
+    }
+
+    function renderLegend() {
+        timelineLegend.innerHTML = '';
+        state.categories.forEach(cat => {
+            const count = state.projects.filter(p => p.category === cat.id).length;
+            if (count === 0) return;
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `<span class="legend-dot" style="background:${cat.color};"></span>${cat.name}`;
+            timelineLegend.appendChild(item);
+        });
+    }
+
+    function renderDayView() {
+        const today = state.currentDate;
+        const viewStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const viewEnd = addDays(viewStart, 1);
+        currentViewLabel.textContent = `${today.getFullYear()}年 ${today.getMonth()+1}月 ${today.getDate()}日`;
+        timelineHeaderDates.style.gridTemplateColumns = `repeat(24, 1fr)`;
+        for (let i=0;i<24;i++) {
+            const cell = document.createElement('div');
+            cell.className = 'timeline-header-cell';
+            cell.textContent = `${String(i).padStart(2,'0')}:00`;
+            timelineHeaderDates.appendChild(cell);
+        }
+        renderProjectBars(viewStart, viewEnd, 'hour');
+    }
+
+    function renderWeekView() {
+        const weekStart = getStartOfWeek(state.currentDate);
+        const viewStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+        const viewEnd = addDays(viewStart, 7);
+        currentViewLabel.textContent = `${weekStart.getFullYear()}年 ${weekStart.getMonth()+1}月 ${weekStart.getDate()}日 \u2014 ${addDays(weekStart,6).getDate()}日`;
+        timelineHeaderDates.style.gridTemplateColumns = `repeat(7, 1fr)`;
+        const today = new Date();
+        for (let i=0;i<7;i++) {
+            const day = addDays(weekStart, i);
+            const cell = document.createElement('div');
+            cell.className = 'timeline-header-cell';
+            cell.textContent = `${day.getMonth()+1}/${day.getDate()}`;
+            if (getDaysDiff(day, today) === 0) cell.classList.add('today');
+            timelineHeaderDates.appendChild(cell);
+        }
+        renderProjectBars(viewStart, viewEnd, 'day');
+    }
+
+    function renderMonthView() {
+        const monthStart = getStartOfMonth(state.currentDate);
+        const daysInMonth = getDaysInMonth(monthStart);
+        const viewStart = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+        const viewEnd = addDays(viewStart, daysInMonth);
+        currentViewLabel.textContent = `${monthStart.getFullYear()}年 ${monthStart.getMonth()+1}月`;
+        timelineHeaderDates.style.gridTemplateColumns = `repeat(${daysInMonth}, 1fr)`;
+        const today = new Date();
+        for (let i=1;i<=daysInMonth;i++) {
+            const day = new Date(monthStart.getFullYear(), monthStart.getMonth(), i);
+            const cell = document.createElement('div');
+            cell.className = 'timeline-header-cell';
+            cell.textContent = i;
+            if (getDaysDiff(day, today) === 0) cell.classList.add('today');
+            timelineHeaderDates.appendChild(cell);
+        }
+        renderProjectBars(viewStart, viewEnd, 'day');
+    }
+
+    function renderYearView() {
+        const yearStart = getStartOfYear(state.currentDate);
+        const viewStart = new Date(yearStart.getFullYear(), 0, 1);
+        const viewEnd = addYears(viewStart, 1);
+        currentViewLabel.textContent = `${yearStart.getFullYear()}年`;
+        timelineHeaderDates.style.gridTemplateColumns = `repeat(12, 1fr)`;
+        const months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+        const today = new Date();
+        for (let i=0;i<12;i++) {
+            const cell = document.createElement('div');
+            cell.className = 'timeline-header-cell';
+            cell.textContent = months[i];
+            if (today.getFullYear()===yearStart.getFullYear() && today.getMonth()===i) cell.classList.add('today');
+            timelineHeaderDates.appendChild(cell);
+        }
+        renderProjectBars(viewStart, viewEnd, 'month');
+    }
+
+    function renderProjectBars(viewStart, viewEnd, unit) {
+        const viewDuration = viewEnd.getTime() - viewStart.getTime();
+        state.projects.forEach(project => {
+            const projStart = parseDate(project.start);
+            const projEnd = parseDate(project.end);
+            if (projEnd.getTime() < viewStart.getTime() || projStart.getTime() > viewEnd.getTime()) return;
+            const barStart = Math.max(projStart.getTime(), viewStart.getTime());
+            const barEnd = Math.min(projEnd.getTime() + MS_PER_DAY, viewEnd.getTime());
+            const left = ((barStart - viewStart.getTime()) / viewDuration) * 100;
+            const width = ((barEnd - barStart) / viewDuration) * 100;
+            const progress = getProgressPercent(project);
+            const catColor = getCategoryColor(project.category);
+            const barColor = catColor || 'var(--primary)';
+            const dotHtml = catColor
+                ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${catColor};margin-right:4px;flex-shrink:0;"></span>`
+                : '';
+            const row = document.createElement('div');
+            row.className = 'project-row';
+            row.innerHTML = `
+                <div class="project-name">${dotHtml}${project.name}</div>
+                <div class="project-bar-wrapper">
+                    <div class="project-bar"
+                         style="left:${left}%; width:${width}%; background:${barColor};"
+                         title="${project.name}${getCategoryName(project.category)?'\n分类: '+getCategoryName(project.category):''}\n开始: ${project.start}\n结束: ${project.end}\n进度: ${progress}%${project.notes?'\n备注: '+project.notes:''}">
+                        ${project.name} (${progress}%)
+                    </div>
+                </div>`;
+            timelineBody.appendChild(row);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════ //
+    // ─── 部署设置面板 ─── //
+    // ═══════════════════════════════════════════════════ //
+
+    function openSettingsModal() {
+        const config = getGitHubConfig();
+        if (config) {
+            document.getElementById('gh-owner').value = config.owner || '';
+            document.getElementById('gh-repo').value = config.repo || '';
+            document.getElementById('gh-branch').value = config.branch || 'main';
+            document.getElementById('gh-path').value = config.path || 'data.json';
+            document.getElementById('gh-token').value = config.token || '';
+        }
+        settingsModal.classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+        settingsModal.classList.add('hidden');
+    }
+
+    function readSettingsForm() {
+        return {
+            owner: document.getElementById('gh-owner').value.trim(),
+            repo: document.getElementById('gh-repo').value.trim(),
+            branch: document.getElementById('gh-branch').value.trim() || 'main',
+            path: document.getElementById('gh-path').value.trim() || 'data.json',
+            token: document.getElementById('gh-token').value.trim(),
+        };
+    }
+
+    async function testGitHubConnection() {
+        const config = readSettingsForm();
+        if (!config.owner || !config.repo || !config.token) {
+            showToast('请填写用户名、仓库名和令牌', 'error');
+            return;
+        }
+        showToast('正在测试连接...', 'info');
+        try {
+            const resp = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`, {
+                headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (resp.ok) {
+                showToast('连接成功！文件已存在，将进行更新', 'success');
+            } else if (resp.status === 404) {
+                showToast('连接成功！文件不存在，将在首次保存时创建', 'success');
+            } else {
+                const err = await resp.json().catch(() => ({}));
+                showToast(`连接失败：${err.message || resp.statusText}`, 'error');
+            }
+        } catch(err) {
+            showToast(`连接失败：${err.message}`, 'error');
+        }
+    }
+
+    function saveSettings() {
+        const config = readSettingsForm();
+        if (!config.owner || !config.repo || !config.token) {
+            showToast('请填写完整配置（用户名、仓库名、令牌）', 'error');
+            return;
+        }
+        saveGitHubConfig(config);
+        showToast('部署设置已保存', 'success');
+        closeSettingsModal();
+    }
+
+    function clearSettings() {
+        if (!confirm('确定要清除 GitHub 部署配置吗？\n清除后数据将仅保存在本地浏览器。')) return;
+        localStorage.removeItem('tz_github_config');
+        updateDeployIndicator();
+        document.getElementById('gh-owner').value = '';
+        document.getElementById('gh-repo').value = '';
+        document.getElementById('gh-branch').value = 'main';
+        document.getElementById('gh-path').value = 'data.json';
+        document.getElementById('gh-token').value = '';
+        showToast('已清除部署配置，数据仅保存在本地', 'info');
+    }
+
+    // ─── 事件绑定 ─── //
+
+    // 侧边栏标签切换
+    sidebarTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            sidebarTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel-form').classList.toggle('hidden', tab.dataset.tab !== 'form');
+            document.getElementById('panel-categories').classList.toggle('hidden', tab.dataset.tab !== 'categories');
+            if (tab.dataset.tab === 'categories') renderCategoryPanel();
+        });
+    });
+
+    // 新建分类
+    addCatBtn.addEventListener('click', () => {
+        const name = newCatName.value.trim();
+        if (!name) { showToast('请输入分类名称', 'error'); newCatName.focus(); return; }
+        if (state.categories.find(c => c.name === name)) { showToast('分类名称已存在', 'error'); return; }
+        const cat = { id: 'cat_' + Date.now(), name, color: getNextColor() };
+        state.categories.push(cat);
+        newCatName.value = '';
+        saveState();
+        renderCategoryPanel();
+        updateCategorySelect();
+        renderCatFilterBar();
+        showToast(`分类「${name}」已创建`, 'success');
+    });
+    newCatName.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCatBtn.click(); } });
+
+    // 排序
+    sortHeaders.forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.sort;
+            if (state.sortBy === col) state.sortDir = state.sortDir==='asc'?'desc':'asc';
+            else { state.sortBy = col; state.sortDir = 'asc'; }
+            renderMainView();
+        });
+    });
+
+    // 表单提交
+    projectForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = projectIdInput.value;
+        const projectData = {
+            name: projectNameInput.value.trim(),
+            category: projectCategoryInput.value,
+            start: startDateInput.value,
+            days: parseInt(cycleDaysInput.value),
+            end: endDateInput.value,
+            notes: notesInput.value.trim(),
+        };
+        if (id) {
+            const idx = state.projects.findIndex(p => p.id === id);
+            if (idx !== -1) state.projects[idx] = { ...state.projects[idx], ...projectData };
+            showToast('项目已更新', 'success');
+        } else {
+            projectData.id = Date.now().toString();
+            state.projects.push(projectData);
+            showToast('项目已添加', 'success');
+        }
+        saveState();
+        renderMainView();
+        resetForm();
+    });
+
+    function resetForm() {
+        projectForm.reset();
+        projectIdInput.value = '';
+        cancelBtn.style.display = 'none';
+        saveBtn.textContent = '保存项目';
+        formTitle.textContent = '基本信息';
+        initFormDates();
+    }
+    cancelBtn.addEventListener('click', resetForm);
+
+    // 三向日期计算
+    function calculateEndDate() {
+        if (!startDateInput.value || !cycleDaysInput.value) return;
+        const start = parseDate(startDateInput.value);
+        let days = parseInt(cycleDaysInput.value);
+        if (days < 1) { days = 1; cycleDaysInput.value = 1; }
+        endDateInput.value = formatDate(addDays(start, days - 1));
+    }
+    function calculateCycleDays() {
+        if (!startDateInput.value || !endDateInput.value) return;
+        const start = parseDate(startDateInput.value);
+        const end = parseDate(endDateInput.value);
+        if (end.getTime() < start.getTime()) { endDateInput.value = startDateInput.value; cycleDaysInput.value = 1; return; }
+        cycleDaysInput.value = getDaysDiff(end, start) + 1;
+    }
+    startDateInput.addEventListener('change', calculateEndDate);
+    cycleDaysInput.addEventListener('input', calculateEndDate);
+    endDateInput.addEventListener('change', calculateCycleDays);
+
+    // 列表操作
+    projectListBody.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        if (!id) return;
+        if (e.target.classList.contains('delete-btn')) {
+            if (!confirm('确定要删除这个项目吗？')) return;
+            state.projects = state.projects.filter(p => p.id !== id);
+            saveState(); renderMainView(); showToast('项目已删除', 'info');
+        } else if (e.target.classList.contains('edit-btn')) {
+            const p = state.projects.find(p => p.id === id);
+            if (!p) return;
+            projectIdInput.value = p.id;
+            projectNameInput.value = p.name;
+            projectCategoryInput.value = p.category || '';
+            startDateInput.value = p.start;
+            cycleDaysInput.value = p.days;
+            endDateInput.value = p.end;
+            notesInput.value = p.notes || '';
+            cancelBtn.style.display = '';
+            saveBtn.textContent = '更新项目';
+            formTitle.textContent = '编辑项目';
+            sidebarTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('[data-tab="form"]').classList.add('active');
+            document.getElementById('panel-form').classList.remove('hidden');
+            document.getElementById('panel-categories').classList.add('hidden');
+            document.getElementById('panel-form').querySelector('.form-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+
+    // 导出 / 导入
+    exportBtn.addEventListener('click', () => {
+        const dateStr = formatDate(new Date()).replace(/-/g,'');
+        const data = { projects: state.projects, categories: state.categories };
+        const a = document.createElement('a');
+        a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
+        a.download = `time${dateStr}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+        showToast(`已导出 time${dateStr}.json`, 'success');
+    });
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const imported = JSON.parse(ev.target.result);
+                if (Array.isArray(imported)) {
+                    state.projects = imported;
+                    imported.forEach(p => { if (p.category === undefined) p.category = ''; });
+                } else if (imported.projects && Array.isArray(imported.projects)) {
+                    state.projects = imported.projects;
+                    if (imported.categories) state.categories = imported.categories;
+                } else { showToast('格式不正确', 'error'); return; }
+                migrateCategoryData();
+                saveState(); renderMainView(); renderCategoryPanel();
+                showToast(`导入成功，共 ${state.projects.length} 个项目`, 'success');
+            } catch(err) { showToast('导入失败：' + err.message, 'error'); }
+            importFile.value = '';
+        };
+        reader.readAsText(file);
+    });
+
+    // 时间轴
+    openTimelineBtn.addEventListener('click', () => { timelineModal.classList.remove('hidden'); renderModalView(); });
+    closeTimelineBtn.addEventListener('click', () => timelineModal.classList.add('hidden'));
+    document.addEventListener('keydown', e => {
+        if (e.key==='Escape') {
+            if (!timelineModal.classList.contains('hidden')) timelineModal.classList.add('hidden');
+            if (!settingsModal.classList.contains('hidden')) settingsModal.classList.add('hidden');
+        }
+    });
+    viewBtns.forEach(btn => {
+        if (btn.id === 'close-timeline-btn') return;
+        btn.addEventListener('click', () => { state.currentView = btn.dataset.view; renderModalView(); });
+    });
+    prevBtn.addEventListener('click', () => navigate(-1));
+    nextBtn.addEventListener('click', () => navigate(1));
+    todayBtn.addEventListener('click', () => navigate(0));
+    function navigate(dir) {
+        if (dir===0) { state.currentDate = new Date(); }
+        else {
+            switch(state.currentView) {
+                case 'day': state.currentDate = addDays(state.currentDate, dir); break;
+                case 'week': state.currentDate = addDays(state.currentDate, dir*7); break;
+                case 'month': state.currentDate = addMonths(state.currentDate, dir); break;
+                case 'year': state.currentDate = addYears(state.currentDate, dir); break;
+            }
+        }
+        renderModalView();
+    }
+
+    // 搜索
+    searchBox.addEventListener('input', renderMainView);
+
+    // 主题
+    themeToggleBtn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = cur==='light'?'dark':'light';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+
+    // 部署设置
+    deploySettingsBtn.addEventListener('click', openSettingsModal);
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); });
+    testGhBtn.addEventListener('click', testGitHubConnection);
+    saveSettingsBtn.addEventListener('click', saveSettings);
+    clearSettingsBtn.addEventListener('click', clearSettings);
+
+    // 锁定
+    logoutBtn.addEventListener('click', logout);
+
+    // 页脚时间
+    function updateFooterTime() {
+        const now = new Date();
+        footerTime.textContent = now.toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+    setInterval(updateFooterTime, 1000);
+    updateFooterTime();
+
+    // 初始化
+    function initFormDates() {
+        startDateInput.value = formatDate(new Date());
+        calculateEndDate();
+    }
+    function loadTheme() {
+        const saved = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+    }
+    function initFooter() {
+        const host = window.location.host || 'time.haloninja.com';
+        pageFooter.textContent = `@ ${host}`;
+    }
+
+    // ─── 启动 ─── //
+    loadTheme();
+    updateDeployIndicator();
+    await loadData();
+    updateCategorySelect();
+    renderMainView();
+    initFormDates();
+    initFooter();
+}
+
+// ═══════════════════════════════════════════════════ //
+// ─── 入口 ─── //
+// ═══════════════════════════════════════════════════ //
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if (sessionStorage.getItem('tz_authed') === 'true') {
+        // 已验证会话 — 用存储的密码重新解密数据
+        const pwd = sessionStorage.getItem('tz_pwd');
+        const gate = document.getElementById('password-gate');
+        if (pwd) {
+            try {
+                const resp = await fetch('data.json', { cache: 'no-cache' });
+                if (resp.ok) {
+                    const encData = await resp.json();
+                    decryptedDataCache = await decryptData(pwd, encData);
+                }
+            } catch(e) {
+                console.log('重新解密数据失败，将使用本地缓存');
+            }
+        }
+        gate.style.display = 'none';
+        initApp();
+    } else {
+        // 显示密码门
+        setupPasswordGate();
+    }
+});
+</script>
+</body>
+</html>
