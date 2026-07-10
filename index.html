@@ -1541,14 +1541,39 @@ async function initApp() {
     // ─── GitHub 部署集成 ─── //
     // ═══════════════════════════════════════════════════ //
 
+    // 仓库默认配置（非敏感信息，可公开）
+    const DEFAULT_GITHUB_CONFIG = {
+        owner: 'CaptainTian888',
+        repo: 'Time-Cycle-Dashboard',
+        branch: 'main',
+        path: 'data.json'
+    };
+
+    // 启动时尝试加载本地令牌文件（config.local.js 已被 .gitignore 排除，不会推送到仓库）
+    function loadLocalToken() {
+        const s = document.createElement('script');
+        s.src = 'config.local.js';
+        s.onerror = () => {};
+        s.onload = () => {
+            if (window.LOCAL_GITHUB_TOKEN) {
+                const cfg = { ...DEFAULT_GITHUB_CONFIG, token: window.LOCAL_GITHUB_TOKEN };
+                localStorage.setItem('tz_github_config', JSON.stringify(cfg));
+                if (typeof updateDeployIndicator === 'function') updateDeployIndicator();
+            }
+        };
+        document.head.appendChild(s);
+    }
+
     function getGitHubConfig() {
         const raw = localStorage.getItem('tz_github_config');
-        if (!raw) return null;
-        try {
-            const config = JSON.parse(raw);
-            if (!config.owner || !config.repo || !config.token) return null;
-            return config;
-        } catch { return null; }
+        if (raw) {
+            try {
+                const config = JSON.parse(raw);
+                if (config.owner && config.repo && config.token) return config;
+            } catch {}
+        }
+        // 回退：有仓库信息但无 token（访客模式，仅浏览不能部署）
+        return null;
     }
 
     function saveGitHubConfig(config) {
@@ -2070,13 +2095,12 @@ async function initApp() {
 
     function openSettingsModal() {
         const config = getGitHubConfig();
-        if (config) {
-            document.getElementById('gh-owner').value = config.owner || '';
-            document.getElementById('gh-repo').value = config.repo || '';
-            document.getElementById('gh-branch').value = config.branch || 'main';
-            document.getElementById('gh-path').value = config.path || 'data.json';
-            document.getElementById('gh-token').value = config.token || '';
-        }
+        const base = config || DEFAULT_GITHUB_CONFIG;
+        document.getElementById('gh-owner').value = base.owner || '';
+        document.getElementById('gh-repo').value = base.repo || '';
+        document.getElementById('gh-branch').value = base.branch || 'main';
+        document.getElementById('gh-path').value = base.path || 'data.json';
+        document.getElementById('gh-token').value = config?.token || '';
         settingsModal.classList.remove('hidden');
     }
 
@@ -2373,6 +2397,7 @@ async function initApp() {
 
     // ─── 启动 ─── //
     loadTheme();
+    loadLocalToken();        // 尝试加载本地令牌（config.local.js，不推送）
     updateDeployIndicator();
     await loadData();
     updateCategorySelect();

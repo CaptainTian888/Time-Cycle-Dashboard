@@ -28,5 +28,8 @@ build/
 # 原始明文数据（不可推送）
 time20260706.json
 
+# 本地敏感配置（令牌等，不可推送）
+config.local.js
+
 # 嵌套旧目录
 Time-Cycle-Dashboard-main/
