@@ -18,10 +18,13 @@
 
 ```
 Time-Cycle-Dashboard/
-├── index.html      # 主页面（含全部 CSS + JS）
-├── data.json       # 项目数据（静态数据源）
-├── README.md       # 本文件
-└── .gitignore      # Git 忽略规则
+├── index.html              # 主页面（含全部 CSS + JS）
+├── data.json               # 项目数据（静态数据源）
+├── functions/
+│   └── api/
+│       └── deploy.js       # Pages Function：代理写回 data.json，持有 GitHub Token
+├── README.md               # 本文件
+└── .gitignore              # Git 忽略规则
 ```
 
 ## 快速开始
@@ -66,35 +69,49 @@ git push -u origin main
 
 部署完成后，CloudFlare 会分配一个 `*.pages.dev` 域名，也可绑定自定义域名。
 
-#### 第三步：在看板中配置部署设置
+#### 第三步：创建 GitHub Token
 
-1. 打开看板页面，输入密码进入
-2. 点击右上角 **「部署设置」** 按钮
-3. 填写 GitHub 仓库信息：
-   - **GitHub 用户名**: 你的 GitHub 用户名
-   - **仓库名称**: 仓库名
-   - **分支名称**: `main`（默认）
-   - **数据文件路径**: `data.json`（默认）
-   - **访问令牌**: GitHub Personal Access Token
-4. 点击 **「测试连接」** 验证配置
-5. 点击 **「保存设置」**
+1. 访问 [GitHub Settings → Fine-grained tokens](https://github.com/settings/personal-access-tokens/new)
+2. **Repository access** 只勾选本仓库
+3. **Permissions → Repository permissions → Contents** 选 **Read and write**（只需要这一项）
+4. 有效期按需设置；到期前记得轮换
+5. 生成后复制备用（下一步填进 Cloudflare，**不要写进代码**）
 
-#### 创建 GitHub Personal Access Token
+#### 第四步：配置 Cloudflare 环境变量
 
-1. 访问 [GitHub Settings → Tokens](https://github.com/settings/tokens/new?scopes=repo&description=Time-Cycle-Dashboard)
-2. 勾选 **`repo`** 权限（完整仓库访问）
-3. 点击 **Generate token**
-4. 复制生成的 token（格式：`ghp_xxxxx...`）
-5. 粘贴到看板的部署设置中
+进入 Pages 项目 → **Settings** → **Variables and Secrets**，添加两个 **Secret**：
 
-> 令牌仅保存在本地浏览器 localStorage，不会上传到任何第三方服务器。
+| 变量名 | 值 |
+| --- | --- |
+| `GITHUB_TOKEN` | 上一步生成的 Token |
+| `DEPLOY_AUTH_HASH` | 见下方获取方式 |
+
+获取 `DEPLOY_AUTH_HASH`：打开看板页面并用密码登录，按 F12 打开浏览器控制台，执行
+
+```js
+await printDeployAuthHash()
+```
+
+复制打印出的 64 位十六进制字符串填入即可。
+
+> 这个哈希是由登录密码经 PBKDF2（20 万次迭代、独立 salt）派生后再做一次 SHA-256 得到的。
+> 服务端只保存哈希，既反推不出密码，也解不开 `data.json`；换密码后需要重新执行上面这行取新值。
+
+可选变量（不配则使用 `functions/api/deploy.js` 里的默认值）：`GH_OWNER`、`GH_REPO`、`GH_BRANCH`、`GH_PATH`。
+
+> **注意**：GitHub Token 只存在于 Cloudflare 服务端环境变量中，浏览器永远拿不到它。
+> 不要把 Token 以任何形式（包括混淆、编码）写进 `index.html` —— 静态页面对所有访客可读。
 
 ## 自动部署流程
 
 ```
 用户编辑数据 → 点击保存 → 数据写入 localStorage
                          ↓
-               GitHub API 提交 data.json
+               本地加密 + 由密码派生鉴权令牌
+                         ↓
+               POST /api/deploy（同源 Pages Function）
+                         ↓
+               Function 校验令牌 → 用服务端 Token 调 GitHub API 提交 data.json
                          ↓
                GitHub 仓库更新 → 触发 CloudFlare Pages 构建
                          ↓
@@ -133,8 +150,8 @@ git push -u origin main
 ## 技术栈
 
 - 纯 HTML / CSS / JavaScript（零依赖）
-- GitHub Contents API（数据同步）
-- CloudFlare Pages（静态托管）
+- GitHub Contents API（数据同步，经服务端代理调用）
+- CloudFlare Pages（静态托管）+ Pages Functions（部署代理）
 - Web Crypto API（AES-256-GCM 加密 + PBKDF2 密钥派生）
 - localStorage（本地缓存）
 

@@ -1610,24 +1610,44 @@ async function initApp() {
     // ─── GitHub 部署集成 ─── //
     // ═══════════════════════════════════════════════════ //
 
-    // 仓库配置（非敏感信息）
-    const GH_OWNER = 'CaptainTian888';
-    const GH_REPO = 'Time-Cycle-Dashboard';
-    const GH_BRANCH = 'main';
-    const GH_PATH = 'data.json';
+    // 部署接口（同源的 Cloudflare Pages Function，GitHub Token 只存在于服务端环境变量）
+    const DEPLOY_ENDPOINT = '/api/deploy';
 
-    // 访问令牌（XOR 混淆存储，运行时还原）
-    const _K = 'TCD-2026';
-    const _T = [51,43,52,114,102,85,127,103,25,20,11,24,103,117,103,79,97,0,34,72,87,2,67,99,100,1,32,73,113,68,91,76,96,38,116,65,97,83,68,94];
-    function getToken() {
-        let t = '';
-        for (let i = 0; i < _T.length; i++) t += String.fromCharCode(_T[i] ^ _K.charCodeAt(i % _K.length));
-        return t;
+    // 鉴权令牌：由登录密码派生，与数据加密密钥使用不同的 salt，
+    // 服务端只保存它的 SHA-256，既拿不到密码也解不开数据。
+    const DEPLOY_AUTH_SALT = 'tcd-deploy-auth-v1';
+
+    async function getDeployAuth(password) {
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
+        );
+        const bits = await crypto.subtle.deriveBits(
+            {
+                name: 'PBKDF2',
+                salt: new TextEncoder().encode(DEPLOY_AUTH_SALT),
+                iterations: 200000,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            256
+        );
+        return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    function getGitHubConfig() {
-        return { owner: GH_OWNER, repo: GH_REPO, branch: GH_BRANCH, path: GH_PATH, token: getToken() };
+    /**
+     * 首次配置用：登录后在浏览器控制台执行 await printDeployAuthHash()，
+     * 把打印出来的哈希填进 Cloudflare 的 DEPLOY_AUTH_HASH 环境变量。
+     */
+    async function printDeployAuthHash() {
+        const pwd = sessionStorage.getItem('tz_pwd');
+        if (!pwd) return '请先登录';
+        const auth = await getDeployAuth(pwd);
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(auth));
+        const hash = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+        console.log('DEPLOY_AUTH_HASH =', hash);
+        return hash;
     }
+    window.printDeployAuthHash = printDeployAuthHash;
 
     let isDeploying = false;
 
@@ -1645,8 +1665,6 @@ async function initApp() {
         if (isDeploying) return;
         isDeploying = true;
 
-        const config = getGitHubConfig();
-        const { owner, repo, branch, path, token } = config;
         const pwd = sessionStorage.getItem('tz_pwd');
 
         // 加密数据后再推送 — 确保仓库中不暴露明文
@@ -1666,51 +1684,28 @@ async function initApp() {
             return;
         }
 
-        const base64Content = btoa(unescape(encodeURIComponent(contentToSend)));
-
         showToast('正在部署到 GitHub...', 'deploy');
 
         try {
-            // 获取当前文件的 SHA（如果存在）
-            let sha = null;
-            try {
-                const getResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
-                if (getResp.ok) {
-                    const fileData = await getResp.json();
-                    sha = fileData.sha;
-                }
-            } catch(e) { /* 文件可能不存在 */ }
+            const auth = await getDeployAuth(pwd);
 
-            // 提交更新
-            const putBody = {
-                message: `Auto-deploy: Update ${path} (${new Date().toLocaleString('zh-CN')})`,
-                content: base64Content,
-                branch: branch,
-                committer: { name: 'Time Dashboard', email: 'dashboard@users.noreply.github.com' }
-            };
-            if (sha) putBody.sha = sha;
-
-            const putResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                method: 'PUT',
+            const resp = await fetch(DEPLOY_ENDPOINT, {
+                method: 'POST',
                 headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Deploy-Auth': auth
                 },
-                body: JSON.stringify(putBody)
+                body: JSON.stringify({ content: contentToSend })
             });
 
-            if (putResp.ok) {
+            if (resp.ok) {
                 const now = new Date();
-                const timeStr = now.toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
                 localStorage.setItem('tz_last_deploy', now.toISOString());
                 updateDeployTime();
                 showToast('部署成功！CloudFlare 将在 1-2 分钟内更新', 'success');
             } else {
-                const err = await putResp.json().catch(() => ({}));
-                showToast(`部署失败：${err.message || putResp.statusText}`, 'error');
+                const err = await resp.json().catch(() => ({}));
+                showToast(`部署失败：${err.error || resp.statusText}`, 'error');
             }
         } catch(err) {
             showToast(`部署失败：${err.message}`, 'error');
